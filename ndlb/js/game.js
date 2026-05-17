@@ -739,8 +739,16 @@ function onHostMsg(data) {
       hideConn();
       // 切换到 lobby 屏幕
       switchScreen('lobby');
+      // 隐藏所有不需要的面板
       document.getElementById('create-form').classList.add('hidden');
       document.getElementById('join-form').classList.add('hidden');
+      document.getElementById('waiting-room').classList.add('hidden');
+      // 隐藏 lobby-header 和 lobby-actions（玩家不需要这些）
+      const lobbyHeader = document.querySelector('.lobby-header');
+      const lobbyActions = document.querySelector('.lobby-actions');
+      if (lobbyHeader) lobbyHeader.style.display = 'none';
+      if (lobbyActions) lobbyActions.style.display = 'none';
+      // 只显示 joined-waiting
       document.getElementById('joined-waiting').classList.remove('hidden');
       break;
     case 'player_list':
