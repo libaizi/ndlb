@@ -16,8 +16,8 @@
       <div class="logo-sub">Top Ten Online · P2P 在线版</div>
     </div>
     <div class="lobby-actions">
-      <button class="btn btn-primary" onclick="showCreateRoom()">创建房间</button>
-      <button class="btn btn-secondary" onclick="showJoinRoom()">加入房间</button>
+      <button id="create-room-btn" class="btn btn-primary" onclick="showCreateRoom()">创建房间</button>
+      <button id="join-room-btn" class="btn btn-secondary" onclick="showJoinRoom()">加入房间</button>
     </div>
 
     <div id="create-form" class="room-panel hidden">
@@ -82,6 +82,31 @@ window.addEventListener('DOMContentLoaded', function() {
     document.getElementById('join-name').value = savedName;
   }
 });
+
+// 重写按钮切换函数
+const _origShowCreateRoom = showCreateRoom;
+showCreateRoom = function() {
+  _origShowCreateRoom();
+  // 切换按钮样式
+  const createBtn = document.getElementById('create-room-btn');
+  const joinBtn = document.getElementById('join-room-btn');
+  if (createBtn) {
+    createBtn.className = 'btn btn-primary';
+    joinBtn.className = 'btn btn-secondary';
+  }
+};
+
+const _origShowJoinRoom = showJoinRoom;
+showJoinRoom = function() {
+  _origShowJoinRoom();
+  // 切换按钮样式
+  const createBtn = document.getElementById('create-room-btn');
+  const joinBtn = document.getElementById('join-room-btn');
+  if (createBtn) {
+    createBtn.className = 'btn btn-secondary';
+    joinBtn.className = 'btn btn-primary';
+  }
+};
 
 const _origDoCreateRoom = doCreateRoom;
 doCreateRoom = async function() {
