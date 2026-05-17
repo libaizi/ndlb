@@ -115,7 +115,7 @@
 let urlRoomCode = null;
 
 function backToIndex() {
-  window.location.href = '/index.html';
+  window.location.href = '/ndlb/index.html';
 }
 
 function getRoomCodeFromPath() {
@@ -138,7 +138,7 @@ function doJoinRoomFromIndex() {
   sessionStorage.setItem('ndl roomCode', code);
   sessionStorage.setItem('ndl playerName', name);
   showConn(`正在加入房间 ${code}...`);
-  setTimeout(() => window.location.href = '/room.html', 300);
+  setTimeout(() => window.location.href = '/ndlb/room.html', 300);
 }
 
 window.addEventListener('DOMContentLoaded', async function() {

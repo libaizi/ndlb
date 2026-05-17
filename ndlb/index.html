@@ -113,7 +113,7 @@ doCreateRoom = async function(attemptCount, relayOnly) {
     sessionStorage.setItem('ndl playerName', name);
 
     setTimeout(function() {
-      window.location.href = '/room.html';
+      window.location.href = '/ndlb/room.html';
     }, 500);
 
   } catch (e) {
@@ -150,7 +150,7 @@ function doJoinRoomFromIndex() {
   showConn(`正在加入房间 ${code}...`);
 
   setTimeout(function() {
-    window.location.href = '/room.html';
+    window.location.href = '/ndlb/room.html';
   }, 300);
 }
 </script>
