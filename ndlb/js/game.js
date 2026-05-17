@@ -42,8 +42,15 @@ function myPlayer() { return GS.players.find(p => p.id === GS.myId); }
 function amCaptain() { return GS.players[GS.captainIndex]?.id === GS.myId; }
 
 function switchScreen(n) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(n + '-screen').classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const target = document.getElementById(n + '-screen');
+  if (target) {
+    target.classList.add('active');
+    target.style.display = 'block';
+  }
 }
 
 function backToLobby() {
