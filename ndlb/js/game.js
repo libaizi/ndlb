@@ -76,7 +76,11 @@ function showCreateRoom() {
   const joinBtn = document.getElementById('join-room-btn');
   if (createBtn) {
     createBtn.className = 'btn btn-primary';
-    joinBtn.className = 'btn btn-secondary';
+    createBtn.style.background = '';
+    createBtn.style.color = '';
+    joinBtn.className = 'btn';
+    joinBtn.style.background = 'var(--g100)';
+    joinBtn.style.color = 'var(--g600)';
   }
 }
 function showJoinRoom() {
@@ -86,8 +90,12 @@ function showJoinRoom() {
   const createBtn = document.getElementById('create-room-btn');
   const joinBtn = document.getElementById('join-room-btn');
   if (createBtn) {
-    createBtn.className = 'btn btn-secondary';
     joinBtn.className = 'btn btn-primary';
+    joinBtn.style.background = '';
+    joinBtn.style.color = '';
+    createBtn.className = 'btn';
+    createBtn.style.background = 'var(--g100)';
+    createBtn.style.color = 'var(--g600)';
   }
 }
 function hideForms() { document.getElementById('create-form').classList.add('hidden'); document.getElementById('join-form').classList.add('hidden'); }
