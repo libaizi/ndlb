@@ -187,16 +187,30 @@ async function showWaitingRoom(name) {
   GS.roomCode = urlRoomCode;
   GS.isHost = true;
   GS.myName = name;
-  GS.myId = hostPeerId(urlRoomCode);
-  GS.players = [{ id: GS.myId, name, number: null, peeked: false, isHost: true }];
 
-  // 切换到 lobby 屏幕
-  switchScreen('lobby');
-  
-  document.getElementById('waiting-room').classList.remove('hidden');
-  document.getElementById('room-code-display').textContent = urlRoomCode;
-  updateWaitingRoom();
-  toast('✅ 房间创建成功！');
+  showConn(`正在创建房间...`);
+
+  try {
+    // 重新初始化 PeerJS（页面跳转后连接丢失）
+    await initHost(urlRoomCode, false);
+    GS.myId = hostPeerId(urlRoomCode);
+    GS.players = [{ id: GS.myId, name, number: null, peeked: false, isHost: true }];
+
+    hideConn();
+    
+    // 切换到 lobby 屏幕
+    switchScreen('lobby');
+    
+    document.getElementById('waiting-room').classList.remove('hidden');
+    document.getElementById('room-code-display').textContent = urlRoomCode;
+    updateWaitingRoom();
+    toast('✅ 房间创建成功！');
+  } catch (e) {
+    hideConn();
+    if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+    toast('❌ 创建房间失败：' + (e.message || e));
+    setTimeout(() => switchScreen('lobby'), 2000);
+  }
 }
 
 async function initAsHost(name) {

@@ -84,52 +84,22 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 
 const _origDoCreateRoom = doCreateRoom;
-doCreateRoom = async function(attemptCount, relayOnly) {
+doCreateRoom = async function() {
   const name = document.getElementById('host-name').value.trim();
   if (!name) { toast('请输入昵称'); return; }
 
   localStorage.setItem('ndl playerName', name);
 
   const code = genCode();
-  GS.roomCode = code;
-  GS.isHost = true;
-  GS.myName = name;
-  attemptCount = attemptCount || 1;
-  relayOnly = relayOnly || false;
 
-  showConn(attemptCount === 1 ? '正在创建房间...' : `正在创建房间... (第${attemptCount}次)`);
-  updateConnProgress('step1');
-  iceDiagLog = [];
+  // 只保存信息，不初始化 PeerJS（让 room.html 来做）
+  sessionStorage.setItem('ndl isHost', 'true');
+  sessionStorage.setItem('ndl roomCode', code);
+  sessionStorage.setItem('ndl playerName', name);
+  sessionStorage.setItem('ndl freshCreate', 'true');
 
-  try {
-    await initHost(code, relayOnly);
-    GS.myId = hostPeerId(code);
-    GS.players = [{ id: GS.myId, name, number: null, peeked: false, isHost: true }];
-
-    toast('✅ 房间创建成功！正在跳转...');
-
-    sessionStorage.setItem('ndl isHost', 'true');
-    sessionStorage.setItem('ndl roomCode', code);
-    sessionStorage.setItem('ndl playerName', name);
-    sessionStorage.setItem('ndl freshCreate', 'true');
-
-    setTimeout(function() {
-      window.location.href = '/ndlb/room.html';
-    }, 500);
-
-  } catch (e) {
-    hideConn(); stopHeartbeat();
-    if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
-    const errInfo = e?.title ? e : classifyError('peer_error', e);
-    if (attemptCount < 3 && e?.source !== 'unavailable-id') {
-      const delay = attemptCount * 2000;
-      toast(`创建失败，${delay/1000}秒后重试...`);
-      setTimeout(() => doCreateRoom(attemptCount+1, attemptCount>=2), delay);
-    } else {
-      showErrorModal({ title: '❌ 创建房间失败', reason: errInfo.reason||String(e),
-        solutions: ['PeerJS 云服务可能暂时不可用', '检查网络连接', '公司/校园网可能屏蔽WebSocket', '刷新页面重试'] });
-    }
-  }
+  // 直接跳转
+  window.location.href = '/ndlb/room.html';
 };
 
 function doJoinRoomFromIndex() {
