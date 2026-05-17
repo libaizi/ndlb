@@ -736,10 +736,13 @@ function onHostMsg(data) {
       GS.myId = data.playerId; GS.roomCode = data.roomCode;
       updateJoinedList(data.players);
       document.getElementById('joined-room-code').textContent = data.roomCode;
+      hideConn();
+      // 切换到 lobby 屏幕
+      switchScreen('lobby');
       document.getElementById('create-form').classList.add('hidden');
       document.getElementById('join-form').classList.add('hidden');
       document.getElementById('joined-waiting').classList.remove('hidden');
-      hideConn(); break;
+      break;
     case 'player_list':
       updateJoinedList(data.players); break;
     case 'game_start':

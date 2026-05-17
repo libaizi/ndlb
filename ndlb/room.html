@@ -249,9 +249,6 @@ async function initAsPlayer(name) {
   GS.isHost = false;
   GS.roomCode = urlRoomCode;
 
-  document.getElementById('name-overlay').classList.add('hidden');
-  document.getElementById('status-bar').style.display = 'block';
-
   const relayMode = sessionStorage.getItem('ndl relayMode') === 'true';
 
   showConn(`正在加入房间 ${urlRoomCode}...`);
