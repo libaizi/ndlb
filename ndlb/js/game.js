@@ -68,8 +68,28 @@ function backToLobby() {
 }
 
 // ---- Lobby UI ----
-function showCreateRoom() { document.getElementById('create-form').classList.remove('hidden'); document.getElementById('join-form').classList.add('hidden'); }
-function showJoinRoom() { document.getElementById('join-form').classList.remove('hidden'); document.getElementById('create-form').classList.add('hidden'); }
+function showCreateRoom() {
+  document.getElementById('create-form').classList.remove('hidden');
+  document.getElementById('join-form').classList.add('hidden');
+  // 切换按钮样式
+  const createBtn = document.getElementById('create-room-btn');
+  const joinBtn = document.getElementById('join-room-btn');
+  if (createBtn) {
+    createBtn.className = 'btn btn-primary';
+    joinBtn.className = 'btn btn-secondary';
+  }
+}
+function showJoinRoom() {
+  document.getElementById('join-form').classList.remove('hidden');
+  document.getElementById('create-form').classList.add('hidden');
+  // 切换按钮样式
+  const createBtn = document.getElementById('create-room-btn');
+  const joinBtn = document.getElementById('join-room-btn');
+  if (createBtn) {
+    createBtn.className = 'btn btn-secondary';
+    joinBtn.className = 'btn btn-primary';
+  }
+}
 function hideForms() { document.getElementById('create-form').classList.add('hidden'); document.getElementById('join-form').classList.add('hidden'); }
 
 async function doCreateRoom(attemptCount, relayOnly) {
