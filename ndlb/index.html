@@ -75,6 +75,29 @@
 <script src="js/network.js"></script>
 <script src="js/game.js"></script>
 <script>
+// 辅助函数
+function toast(msg) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }, 2000);
+}
+
+function showConn(msg) {
+  const overlay = document.getElementById('connecting-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('hidden');
+  const text = document.getElementById('connecting-text');
+  if (text) text.textContent = msg;
+}
+
+function hideConn() {
+  const overlay = document.getElementById('connecting-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
 window.addEventListener('DOMContentLoaded', function() {
   const savedName = localStorage.getItem('ndl playerName') || '';
   if (savedName) {
@@ -148,13 +171,6 @@ function doJoinRoomFromIndex() {
   if (relayMode) sessionStorage.setItem('ndl relayMode', 'true');
 
   showConn(`正在加入房间 ${code}...`);
-
-  sessionStorage.setItem('ndl isHost', 'false');
-  sessionStorage.setItem('ndl roomCode', code);
-  sessionStorage.setItem('ndl playerName', name);
-
-  const relayMode = document.getElementById('join-relay-mode')?.checked || false;
-  if (relayMode) sessionStorage.setItem('ndl relayMode', 'true');
 
   setTimeout(function() {
     window.location.href = '/room.html';
