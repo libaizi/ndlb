@@ -733,13 +733,11 @@ function onHostMsg(data) {
       setTimeout(() => backToLobby(), 1500);
       break;
     case 'joined':
-      console.log('[Player] Received joined message:', data);
       GS.myId = data.playerId; GS.roomCode = data.roomCode;
       updateJoinedList(data.players);
       document.getElementById('joined-room-code').textContent = data.roomCode;
       hideConn();
       // 切换到 lobby 屏幕
-      console.log('[Player] Switching to lobby screen');
       switchScreen('lobby');
       // 隐藏所有不需要的面板
       document.getElementById('create-form').classList.add('hidden');
@@ -748,17 +746,10 @@ function onHostMsg(data) {
       // 隐藏 lobby-header 和 lobby-actions（玩家不需要这些）
       const lobbyHeader = document.querySelector('.lobby-header');
       const lobbyActions = document.querySelector('.lobby-actions');
-      if (lobbyHeader) {
-        console.log('[Player] Hiding lobby header');
-        lobbyHeader.style.display = 'none';
-      }
-      if (lobbyActions) {
-        console.log('[Player] Hiding lobby actions');
-        lobbyActions.style.display = 'none';
-      }
+      if (lobbyHeader) lobbyHeader.style.display = 'none';
+      if (lobbyActions) lobbyActions.style.display = 'none';
       // 只显示 joined-waiting
       document.getElementById('joined-waiting').classList.remove('hidden');
-      console.log('[Player] Showing joined-waiting panel');
       break;
     case 'player_list':
       updateJoinedList(data.players); break;
