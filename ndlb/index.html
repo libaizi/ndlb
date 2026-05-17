@@ -111,6 +111,7 @@ doCreateRoom = async function(attemptCount, relayOnly) {
     sessionStorage.setItem('ndl isHost', 'true');
     sessionStorage.setItem('ndl roomCode', code);
     sessionStorage.setItem('ndl playerName', name);
+    sessionStorage.setItem('ndl freshCreate', 'true');
 
     setTimeout(function() {
       window.location.href = '/ndlb/room.html';

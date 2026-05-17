@@ -162,10 +162,18 @@ window.addEventListener('DOMContentLoaded', async function() {
   const isHostInfo = sessionStorage.getItem('ndl isHost');
   const hostCode = sessionStorage.getItem('ndl roomCode');
   const storedName = sessionStorage.getItem('ndl playerName');
+  const isFreshCreate = sessionStorage.getItem('ndl freshCreate') === 'true';
 
   if (isHostInfo === 'true' && hostCode === urlRoomCode && storedName) {
     console.log('[Room] HOST mode - restoring...');
-    await initAsHost(storedName);
+    // 如果是刚创建的房间，不自动连接，等待玩家加入
+    if (isFreshCreate) {
+      console.log('[Room] Fresh created room - showing waiting room');
+      sessionStorage.removeItem('ndl freshCreate');
+      showWaitingRoom(storedName);
+    } else {
+      await initAsHost(storedName);
+    }
   } else if (storedName && hostCode === urlRoomCode) {
     console.log('[Room] PLAYER mode - auto connecting with:', storedName);
     await initAsPlayer(storedName);
@@ -174,6 +182,20 @@ window.addEventListener('DOMContentLoaded', async function() {
     showNameInput();
   }
 });
+
+async function showWaitingRoom(name) {
+  GS.roomCode = urlRoomCode;
+  GS.isHost = true;
+  GS.myName = name;
+  GS.myId = hostPeerId(urlRoomCode);
+  GS.players = [{ id: GS.myId, name, number: null, peeked: false, isHost: true }];
+
+  document.getElementById('name-overlay').classList.add('hidden');
+  document.getElementById('waiting-room').classList.remove('hidden');
+  document.getElementById('room-code-display').textContent = urlRoomCode;
+  updateWaitingRoom();
+  toast('✅ 房间创建成功！');
+}
 
 async function initAsHost(name) {
   GS.roomCode = urlRoomCode;
