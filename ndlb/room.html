@@ -163,15 +163,18 @@ window.addEventListener('DOMContentLoaded', async function() {
   const hostCode = sessionStorage.getItem('ndl roomCode');
   const storedName = sessionStorage.getItem('ndl playerName');
   const isFreshCreate = sessionStorage.getItem('ndl freshCreate') === 'true';
+  
+  console.log('[Room] Debug:', { isHostInfo, hostCode, urlRoomCode, storedName, isFreshCreate });
 
   if (isHostInfo === 'true' && hostCode === urlRoomCode && storedName) {
-    console.log('[Room] HOST mode - restoring...');
+    console.log('[Room] HOST mode detected');
     // 如果是刚创建的房间，不自动连接，等待玩家加入
     if (isFreshCreate) {
-      console.log('[Room] Fresh created room - showing waiting room');
+      console.log('[Room] Fresh created room - calling showWaitingRoom');
       sessionStorage.removeItem('ndl freshCreate');
       showWaitingRoom(storedName);
     } else {
+      console.log('[Room] Restoring host - calling initAsHost');
       await initAsHost(storedName);
     }
   } else if (storedName && hostCode === urlRoomCode) {
