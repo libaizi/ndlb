@@ -113,7 +113,7 @@ doCreateRoom = async function(attemptCount, relayOnly) {
     sessionStorage.setItem('ndl playerName', name);
 
     setTimeout(function() {
-      window.location.href = '/' + code;
+      window.location.href = '/room.html';
     }, 500);
 
   } catch (e) {
@@ -149,8 +149,15 @@ function doJoinRoomFromIndex() {
 
   showConn(`正在加入房间 ${code}...`);
 
+  sessionStorage.setItem('ndl isHost', 'false');
+  sessionStorage.setItem('ndl roomCode', code);
+  sessionStorage.setItem('ndl playerName', name);
+
+  const relayMode = document.getElementById('join-relay-mode')?.checked || false;
+  if (relayMode) sessionStorage.setItem('ndl relayMode', 'true');
+
   setTimeout(function() {
-    window.location.href = '/' + code;
+    window.location.href = '/room.html';
   }, 300);
 }
 </script>

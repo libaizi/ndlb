@@ -115,7 +115,7 @@
 let urlRoomCode = null;
 
 function backToIndex() {
-  window.location.href = '/';
+  window.location.href = '/index.html';
 }
 
 function getRoomCodeFromPath() {
@@ -138,11 +138,17 @@ function doJoinRoomFromIndex() {
   sessionStorage.setItem('ndl roomCode', code);
   sessionStorage.setItem('ndl playerName', name);
   showConn(`正在加入房间 ${code}...`);
-  setTimeout(() => window.location.href = '/' + code, 300);
+  setTimeout(() => window.location.href = '/room.html', 300);
 }
 
 window.addEventListener('DOMContentLoaded', async function() {
-  urlRoomCode = getRoomCodeFromPath();
+  // 优先从 sessionStorage 获取房间码（GitHub Pages 不支持动态路由）
+  urlRoomCode = sessionStorage.getItem('ndl roomCode');
+  
+  // 如果没有，再尝试从 URL 路径获取
+  if (!urlRoomCode) {
+    urlRoomCode = getRoomCodeFromPath();
+  }
 
   if (!urlRoomCode) {
     switchScreen('lobby');
