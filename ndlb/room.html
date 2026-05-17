@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>脑洞量表 - 游戏房间</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <!-- GAME SCREEN (默认显示) -->
+  <div id="game-screen" class="screen active">
+    <div id="status-bar" style="display:none">
+      <div class="status-row">
+        <div>第 <span id="game-round">1</span> 轮 · 出题者：<span id="captain-name"></span></div>
+        <div class="score-display"><span class="score-uc">🦄 <span id="uc">0</span></span><span class="score-pc">💩 <span id="pc">0</span></span></div>
+      </div>
+      <div class="status-row">
+        <div class="round-dots" id="round-dots"></div>
+        <div style="font-size:12px;color:var(--g400)">房间：<span id="game-room-code"></span><span class="conn-dot" id="conn-dot"></span></div>
+      </div>
+    </div>
+    <div id="game-layout">
+      <div class="player-sidebar" id="player-sidebar">
+        <div class="sidebar-title">👥 玩家列表</div>
+        <div id="sidebar-player-list"></div>
+      </div>
+      <div id="game-content" style="flex:1;min-width:0"></div>
+    </div>
+  </div>
+
+  <!-- NAME INPUT (首次访问且无昵称时显示) -->
+  <div id="name-overlay" class="connecting-overlay hidden" style="background:rgba(0,0,0,.85);z-index:200">
+    <div style="background:#fff;border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center;box-shadow:var(--shx)">
+      <div style="font-size:48px;margin-bottom:12px">🚪</div>
+      <div style="font-size:24px;font-weight:800;color:var(--primary);margin-bottom:4px" id="overlay-room-code"></div>
+      <div style="font-size:14px;color:var(--g500);margin-bottom:24px">游戏房间</div>
+
+      <div style="text-align:left;margin-bottom:20px">
+        <label style="display:block;font-size:13px;color:var(--g500);margin-bottom:6px;font-weight:600">你的昵称</label>
+        <input id="overlay-name" maxlength="10" placeholder="输入昵称开始游戏" style="width:100%;box-sizing:border-box">
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;justify-content:center;font-size:13px;color:var(--g500);cursor:pointer;margin-bottom:20px">
+        <input type="checkbox" id="overlay-relay" style="width:auto;margin:0">
+        <span>🔄 中继模式</span>
+      </label>
+
+      <button class="btn btn-primary" onclick="joinWithName()" style="width:100%">🎮 进入房间</button>
+      <button class="btn btn-sm btn-secondary mt-2" onclick="backToIndex()" style="width:auto;display:block;margin:12px auto 0">← 返回首页</button>
+    </div>
+  </div>
+
+  <!-- LOBBY (无房间码时显示) -->
+  <div id="lobby-screen" class="screen" style="display:none">
+    <div class="lobby-header">
+      <div class="logo">🦄 脑洞量表</div>
+      <div class="logo-sub">Top Ten Online · P2P 在线版</div>
+    </div>
+    <div class="lobby-actions">
+      <button class="btn btn-primary" onclick="showCreateRoom()">创建房间</button>
+      <button class="btn btn-secondary" onclick="showJoinRoom()">加入房间</button>
+    </div>
+    <div id="create-form" class="room-panel hidden">
+      <div class="card-title">创建房间</div>
+      <div class="form-group"><label>你的昵称</label><input id="host-name" maxlength="10" placeholder="输入昵称"></div>
+      <button class="btn btn-primary" onclick="doCreateRoom()">创建</button>
+    </div>
+    <div id="join-form" class="room-panel hidden">
+      <div class="card-title">加入房间</div>
+      <div class="form-group"><label>房间码</label><input id="join-code" maxlength="6" placeholder="输入4位房间码" style="text-transform:uppercase;letter-spacing:4px;font-weight:700;text-align:center;font-size:20px"></div>
+      <div class="form-group"><label>你的昵称</label><input id="join-name" maxlength="10" placeholder="输入昵称"></div>
+      <button class="btn btn-primary" onclick="doJoinRoomFromIndex()">加入</button>
+      <div id="join-error" class="error-box hidden"></div>
+    </div>
+    <div id="waiting-room" class="room-panel hidden">
+      <div class="card-title">房间已创建</div>
+      <div class="room-code-display" id="room-code-display"></div>
+      <ul class="player-list" id="waiting-player-list"></ul>
+      <button class="btn btn-success" id="start-game-btn" onclick="doStartGame()" disabled>至少4人才能开始</button>
+    </div>
+    <div id="joined-waiting" class="room-panel hidden">
+      <div class="card-title">已加入房间</div>
+      <div id="joined-room-code" style="text-align:center;font-size:28px;font-weight:800;color:var(--primary);letter-spacing:4px;margin-bottom:16px"></div>
+      <ul class="player-list" id="joined-player-list"></ul>
+    </div>
+  </div>
+</div>
+
+<div id="connecting-overlay" class="connecting-overlay hidden">
+  <div class="spinner"></div>
+  <div style="font-weight:600;color:var(--g600);margin-bottom:8px" id="connecting-text">正在连接...</div>
+  <div class="conn-steps" id="conn-steps">
+    <div class="step" id="conn-step1"><span class="step-icon">⏳</span> 连接信令服务器</div>
+    <div class="step" id="conn-step2"><span class="step-icon">⏳</span> 连接房主</div>
+    <div class="step" id="conn-step3"><span class="step-icon">⏳</span> 建立P2P通道</div>
+  </div>
+</div>
+
+<div id="peek-overlay" class="peek-overlay hidden" onclick="closePeek()">
+  <div class="peek-modal" onclick="event.stopPropagation()">
+    <div class="peek-name" id="peek-name"></div>
+    <div class="peek-number" id="peek-number"></div>
+    <div style="font-size:13px;color:var(--g400);margin-bottom:16px">记住你的数字！</div>
+    <button class="btn btn-success btn-sm" onclick="confirmPeek()" style="width:auto">已记住</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="js/network.js"></script>
+<script src="js/game.js"></script>
+<script>
+let urlRoomCode = null;
+
+function backToIndex() {
+  window.location.href = '/';
+}
+
+function getRoomCodeFromPath() {
+  const path = window.location.pathname;
+  const segments = path.split('/').filter(s => s.length > 0);
+  for (const segment of segments) {
+    const code = segment.toUpperCase();
+    if (code.length >= 4 && code.length <= 6 && /^[A-Z0-9]+$/.test(code)) return code;
+  }
+  return null;
+}
+
+function doJoinRoomFromIndex() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  const name = document.getElementById('join-name').value.trim();
+  if (code.length < 4) { toast('请输入房间码'); return; }
+  if (!name) { toast('请输入昵称'); return; }
+  localStorage.setItem('ndl playerName', name);
+  sessionStorage.setItem('ndl isHost', 'false');
+  sessionStorage.setItem('ndl roomCode', code);
+  sessionStorage.setItem('ndl playerName', name);
+  showConn(`正在加入房间 ${code}...`);
+  setTimeout(() => window.location.href = '/' + code, 300);
+}
+
+window.addEventListener('DOMContentLoaded', async function() {
+  urlRoomCode = getRoomCodeFromPath();
+
+  if (!urlRoomCode) {
+    switchScreen('lobby');
+    const savedName = localStorage.getItem('ndl playerName') || '';
+    if (savedName) { document.getElementById('host-name').value = savedName; document.getElementById('join-name').value = savedName; }
+    return;
+  }
+
+  document.getElementById('game-room-code').textContent = urlRoomCode;
+
+  const isHostInfo = sessionStorage.getItem('ndl isHost');
+  const hostCode = sessionStorage.getItem('ndl roomCode');
+  const storedName = sessionStorage.getItem('ndl playerName');
+
+  if (isHostInfo === 'true' && hostCode === urlRoomCode && storedName) {
+    console.log('[Room] HOST mode - restoring...');
+    await initAsHost(storedName);
+  } else if (storedName && hostCode === urlRoomCode) {
+    console.log('[Room] PLAYER mode - auto connecting with:', storedName);
+    await initAsPlayer(storedName);
+  } else {
+    console.log('[Room] No session info - showing name input');
+    showNameInput();
+  }
+});
+
+async function initAsHost(name) {
+  GS.roomCode = urlRoomCode;
+  GS.isHost = true;
+  GS.myName = name;
+
+  document.getElementById('name-overlay').classList.add('hidden');
+  document.getElementById('status-bar').style.display = 'block';
+
+  showConn(`正在恢复房主身份...`);
+
+  try {
+    await initHost(urlRoomCode, false);
+    GS.myId = hostPeerId(urlRoomCode);
+    GS.players = [{ id: GS.myId, name, number: null, peeked: false, isHost: true }];
+
+    hideConn();
+    document.getElementById('waiting-room').classList.remove('hidden');
+    document.getElementById('room-code-display').textContent = urlRoomCode;
+    updateWaitingRoom();
+    toast('✅ 房主身份已恢复！');
+
+  } catch (e) {
+    hideConn(); stopHeartbeat();
+    if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+    toast('❌ 无法恢复房主身份：' + (e.message || e));
+    setTimeout(() => switchScreen('lobby'), 2000);
+  }
+}
+
+async function initAsPlayer(name) {
+  GS.myName = name;
+  GS.isHost = false;
+  GS.roomCode = urlRoomCode;
+
+  document.getElementById('name-overlay').classList.add('hidden');
+  document.getElementById('status-bar').style.display = 'block';
+
+  const relayMode = sessionStorage.getItem('ndl relayMode') === 'true';
+
+  showConn(`正在加入房间 ${urlRoomCode}...`);
+
+  try {
+    await initClient(urlRoomCode, relayMode);
+    sendHost({ type: 'join', name });
+  } catch (e) {
+    hideConn();
+    if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+    stopHeartbeat();
+
+    const errInfo = e?.title ? e : classifyError('peer_error', e);
+
+    if (!relayMode) {
+      toast('连接失败，尝试中继模式...');
+      setTimeout(async () => {
+        try {
+          showConn('正在通过中继服务器连接...');
+          await initClient(urlRoomCode, true);
+          sendHost({ type: 'join', name });
+        } catch (e2) {
+          hideConn();
+          showErrorModal(e2?.title ? e2 : classifyError('host_error', e2, true));
+        }
+      }, 2000);
+    } else {
+      showErrorModal(errInfo);
+    }
+  }
+}
+
+function showNameInput() {
+  document.getElementById('overlay-room-code').textContent = urlRoomCode;
+  const savedName = localStorage.getItem('ndl playerName') || '';
+  if (savedName) document.getElementById('overlay-name').value = savedName;
+  document.getElementById('name-overlay').classList.remove('hidden');
+}
+
+function joinWithName() {
+  const name = document.getElementById('overlay-name').value.trim();
+  if (!name) { toast('请输入昵称'); return; }
+
+  localStorage.setItem('ndl playerName', name);
+  sessionStorage.setItem('ndl isHost', 'false');
+  sessionStorage.setItem('ndl roomCode', urlRoomCode);
+  sessionStorage.setItem('ndl playerName', name);
+
+  const relayMode = document.getElementById('overlay-relay').checked;
+  if (relayMode) sessionStorage.setItem('ndl relayMode', 'true');
+
+  initAsPlayer(name);
+}
+</script>
+</body>
+</html>

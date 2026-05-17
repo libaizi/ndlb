@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>页面未找到 - 脑洞量表</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 72px;
+      margin: 0 0 20px;
+      opacity: 0.3;
+    }
+    p {
+      font-size: 20px;
+      margin: 0 0 30px;
+    }
+    a {
+      display: inline-block;
+      padding: 12px 30px;
+      background: white;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 25px;
+      font-weight: 600;
+      transition: transform 0.2s;
+    }
+    a:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>404</h1>
+    <p>页面未找到</p>
+    <p style="font-size: 14px; opacity: 0.8;">如果是访问房间码，请确保链接正确</p>
+    <a href="/">返回首页</a>
+  </div>
+  <script>
+    // GitHub Pages 404 处理：尝试解析路径并重定向到 room.html
+    const path = window.location.pathname;
+    const segments = path.split('/').filter(s => s.length > 0);
+    
+    // 检查是否是房间码路径
+    if (segments.length >= 1) {
+      const code = segments[segments.length - 1].toUpperCase();
+      if (/^[A-Z0-9]{4,6}$/.test(code)) {
+        // 将房间码保存到 sessionStorage 并重定向
+        sessionStorage.setItem('ndl roomCode', code);
+        sessionStorage.setItem('ndl isHost', 'false');
+        window.location.replace('/room.html');
+      }
+    }
+  </script>
+</body>
+</html>

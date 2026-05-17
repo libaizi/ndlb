@@ -1,0 +1,10 @@
+# Netlify 路由规则
+
+# 首页
+/                 /index.html   200
+
+# 房间码路由（4位字母数字）→ 显示 room.html
+/:code            /room.html    200
+
+# 其他所有路径 → 显示 index.html（SPA fallback）
+/*                /index.html   200

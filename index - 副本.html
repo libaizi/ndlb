@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>脑洞量表 - Top Ten Online</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#4F46E5;--primary-light:#818CF8;--primary-bg:#EEF2FF;
+  --success:#10B981;--success-bg:#D1FAE5;
+  --error:#EF4444;--error-bg:#FEE2E2;
+  --warn:#F59E0B;
+  --g50:#F9FAFB;--g100:#F3F4F6;--g200:#E5E7EB;--g300:#D1D5DB;
+  --g400:#9CA3AF;--g500:#6B7280;--g600:#4B5563;--g700:#374151;--g800:#1F2937;
+  --r:12px;--rs:8px;
+  --sh:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shm:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+  --shl:0 10px 15px rgba(0,0,0,.1),0 4px 6px rgba(0,0,0,.05);
+  --shx:0 20px 25px rgba(0,0,0,.1),0 10px 10px rgba(0,0,0,.04);
+  --t:.2s ease
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans SC',sans-serif;background:var(--g50);color:var(--g800);min-height:100vh;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;font-size:15px;transition:var(--t)}
+input{font-family:inherit;font-size:15px;outline:none;border:2px solid var(--g200);border-radius:var(--rs);padding:10px 14px;transition:var(--t);width:100%}
+input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
+
+.hidden{display:none!important}
+.text-center{text-align:center}
+.text-muted{color:var(--g400)}
+.mt-1{margin-top:8px}.mt-2{margin-top:16px}
+
+#app{max-width:640px;margin:0 auto;padding:16px;min-height:100vh}
+
+/* Status Bar */
+#status-bar{background:#fff;border-radius:var(--r);padding:12px 16px;box-shadow:var(--sh);margin-bottom:16px;display:none}
+.status-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--g600)}
+.status-row+.status-row{margin-top:6px}
+.round-dots{display:flex;gap:6px}
+.round-dot{width:24px;height:24px;border-radius:50%;background:var(--g200);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--g400)}
+.round-dot.done{background:var(--success-bg);color:var(--success)}
+.round-dot.current{background:var(--primary-bg);color:var(--primary);box-shadow:0 0 0 2px var(--primary-light)}
+.score-display{display:flex;gap:16px;font-weight:700;font-size:14px}
+.score-uc{color:var(--success)}.score-pc{color:var(--error)}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;margin-left:4px}
+.conn-dot.off{background:var(--error);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+
+/* Lobby */
+.lobby-header{text-align:center;padding:40px 20px 24px}
+.logo{font-size:32px;font-weight:800;color:var(--primary);letter-spacing:-1px}
+.logo-sub{font-size:14px;color:var(--g400);margin-top:4px}
+.lobby-actions{display:flex;gap:12px;margin-top:24px}
+.lobby-actions .btn{flex:1}
+
+.room-panel{background:#fff;border-radius:var(--r);padding:24px;box-shadow:var(--shm);margin-top:16px}
+.card-title{font-size:18px;font-weight:700;margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;color:var(--g500);margin-bottom:4px;font-weight:600}
+
+.room-code-display{font-size:48px;font-weight:900;color:var(--primary);text-align:center;letter-spacing:8px;padding:16px 0}
+.room-code-hint{text-align:center;font-size:13px;color:var(--g400);margin-bottom:16px}
+.player-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.player-list li{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--g50);border-radius:var(--rs);font-size:14px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--primary-bg);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.host-tag{margin-left:auto;font-size:11px;background:var(--primary-bg);color:var(--primary);padding:2px 8px;border-radius:99px;font-weight:600}
+.kick-btn{margin-left:auto;font-size:11px;background:transparent;color:var(--g400);padding:2px 8px;border-radius:99px;border:1px solid var(--g200);cursor:pointer;transition:var(--t)}
+.kick-btn:hover{background:var(--error);color:#fff;border-color:var(--error)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:var(--rs);font-weight:600;width:100%;cursor:pointer;transition:all .15s ease;border:none;outline:none;-webkit-tap-highlight-color:transparent}
+.btn-sm{padding:8px 16px;font-size:13px;width:auto}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:#4338CA}
+.btn-primary:active{background:#3730A3;transform:scale(.98)}
+.btn-primary:disabled{background:var(--g300);cursor:not-allowed}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#059669}
+.btn-success:active{background:#047857;transform:scale(.98)}
+.btn-secondary{background:var(--g100);color:var(--g600)}
+.btn-secondary:hover{background:var(--g200)}
+.btn-secondary:active{background:var(--g200);transform:scale(.98)}
+.btn-warn{background:var(--warn);color:#fff}
+.btn-warn:hover{background:#D97706}
+.btn-warn:active{background:#B45309;transform:scale(.98)}
+
+/* Error box */
+.error-box{background:var(--error-bg);color:var(--error);padding:10px 14px;border-radius:var(--rs);font-size:13px;margin-top:12px}
+
+/* Connecting */
+.connecting-overlay{position:fixed;inset:0;background:rgba(255,255,255,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:150}
+.spinner{width:40px;height:40px;border:4px solid var(--g200);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.conn-steps{margin-top:16px;text-align:left;font-size:13px;color:var(--g500)}
+.conn-steps .step{display:flex;align-items:center;gap:8px;padding:4px 0;transition:var(--t)}
+.conn-steps .step.active{color:var(--primary);font-weight:600}
+.conn-steps .step.done{color:var(--success)}
+.conn-steps .step .step-icon{width:18px;text-align:center}
+
+/* Peek Overlay */
+.peek-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:200}
+.peek-modal{background:#fff;border-radius:var(--r);padding:32px;text-align:center;box-shadow:var(--shx);max-width:300px;width:90%}
+.peek-name{font-size:16px;color:var(--g500);margin-bottom:8px}
+.peek-number{font-size:80px;font-weight:900;color:var(--primary);line-height:1;margin-bottom:12px}
+
+/* Error Modal */
+.error-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:300}
+.error-modal{background:#fff;border-radius:var(--r);padding:24px;max-width:420px;width:90%;box-shadow:var(--shx);max-height:90vh;overflow-y:auto}
+.error-modal-title{font-size:18px;font-weight:700;margin-bottom:12px}
+.error-modal-body{font-size:14px;color:var(--g600);line-height:1.6}
+.error-reason{background:var(--error-bg);color:var(--error);padding:10px 14px;border-radius:var(--rs);font-weight:600}
+.error-modal-body ul{padding-left:20px;margin:8px 0}
+.error-modal-body li{margin:4px 0;font-size:13px}
+.error-modal-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.error-modal-actions .btn{flex:1;min-width:100px}
+
+/* Game Content */
+.card{background:#fff;border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:16px}
+.card .card-title{margin-bottom:12px;font-size:16px}
+
+.topic-card{background:var(--primary-bg);border:1px solid #C7D2FE;border-radius:var(--r);padding:16px;margin-bottom:16px}
+.topic-card .topic-text{font-size:18px;font-weight:700;margin-bottom:8px}
+.topic-card .topic-range{font-size:14px;color:var(--g500)}
+.topic-card .topic-range span{font-weight:700;color:var(--primary)}
+
+.answer-prompt{text-align:center;padding:24px 0}
+.big-text{font-size:24px;font-weight:800;margin-bottom:8px}
+.sub-text{font-size:14px;color:var(--g400)}
+
+/* Sort */
+.sort-direction{display:flex;justify-content:space-between;font-size:12px;color:var(--g400);margin-bottom:8px;font-weight:600}
+.sort-area{display:flex;flex-wrap:wrap;gap:8px;min-height:60px;padding:12px;background:var(--g50);border-radius:var(--rs);margin-bottom:16px;border:2px dashed var(--g200)}
+.sort-card{background:#fff;border:2px solid var(--g200);border-radius:var(--rs);padding:8px 14px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;cursor:grab;user-select:none;transition:var(--t)}
+.sort-card:active{cursor:grabbing;border-color:var(--primary);background:var(--primary-bg)}
+.sort-card.dragging{opacity:.4}
+
+/* Flip Cards */
+.flip-area{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:16px}
+.flip-card{width:100px;height:130px;perspective:1000px;cursor:pointer}
+.flip-card-inner{position:relative;width:100%;height:100%;transition:transform 0.6s;transform-style:preserve-3d}
+.flip-card.flipped .flip-card-inner{transform:rotateY(180deg)}
+.flip-card.flipped{cursor:default}
+.flip-card-front,.flip-card-back{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:var(--shm)}
+.flip-card-front{background:linear-gradient(135deg,var(--primary) 0%,#6366F1 100%);color:#fff;font-weight:600;font-size:14px;gap:6px}
+.flip-card-back{background:#fff;border:3px solid var(--g200);transform:rotateY(180deg)}
+.flip-number{font-size:36px;font-weight:900;color:var(--primary);line-height:1}
+.flip-name{font-size:12px;color:var(--g600);margin-top:4px}
+.flip-status{font-size:16px;margin-top:2px}
+.flip-card.correct .flip-card-back{border-color:var(--success);background:var(--success-bg)}
+.flip-card.correct .flip-number{color:var(--success)}
+.flip-card.wrong .flip-card-back{border-color:var(--error);background:var(--error-bg)}
+.flip-card.wrong .flip-number{color:var(--error)}
+
+/* Reveal */
+.reveal-card{background:#fff;border-radius:var(--r);padding:16px;box-shadow:var(--shm);margin-bottom:8px;display:flex;align-items:center;gap:14px;animation:popIn .4s ease}
+@keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.reveal-number{font-size:32px;font-weight:900;width:48px;text-align:center;flex-shrink:0}
+.reveal-number.correct{color:var(--success)}
+.reveal-number.wrong{color:var(--error)}
+.reveal-name{font-size:15px;font-weight:600}
+.reveal-status{font-size:12px;color:var(--g400)}
+
+/* Misc */
+.wd::after{content:'';animation:dots 1.5s infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--g800);color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:999;opacity:0;transition:.3s ease;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.screen{display:none}
+.screen.active{display:block}
+
+/* Game Layout */
+#game-screen.active #app{display:flex;gap:16px;align-items:flex-start}
+#game-layout{display:flex;gap:16px;width:100%;align-items:flex-start}
+
+/* Player Sidebar */
+.player-sidebar{width:180px;flex-shrink:0;background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:12px;position:sticky;top:16px}
+.sidebar-title{font-size:14px;font-weight:700;color:var(--g600);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--g200)}
+.sidebar-player{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:var(--rs);font-size:13px;transition:var(--t)}
+.sidebar-player:hover{background:var(--g50)}
+.sidebar-player.current-captain{background:var(--primary-bg);border:1px solid var(--primary-light)}
+.sidebar-player.me{font-weight:600}
+.sidebar-avatar{width:28px;height:28px;border-radius:50%;background:var(--primary-bg);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.sidebar-info{flex:1;min-width:0}
+.sidebar-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-role{font-size:10px;color:var(--g400)}
+.sidebar-status-dot{width:8px;height:8px;border-radius:50%;background:var(--g300);flex-shrink:0}
+.sidebar-status-dot.online{background:var(--success)}
+.sidebar-status-dot.captain{background:var(--primary)}
+
+@media(max-width:768px){
+  #game-layout{flex-direction:column}
+  .player-sidebar{width:100%;position:static}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- LOBBY SCREEN -->
+  <div id="lobby-screen" class="screen active">
+    <div class="lobby-header">
+      <div class="logo">🦄 脑洞量表</div>
+      <div class="logo-sub">Top Ten Online · P2P 在线版</div>
+    </div>
+    <div class="lobby-actions">
+      <button class="btn btn-primary" onclick="showCreateRoom()">创建房间</button>
+      <button class="btn btn-secondary" onclick="showJoinRoom()">加入房间</button>
+    </div>
+
+    <div id="create-form" class="room-panel hidden">
+      <div class="card-title">创建房间</div>
+      <div class="form-group"><label>你的昵称</label><input id="host-name" maxlength="10" placeholder="输入昵称"></div>
+      <button class="btn btn-primary" onclick="doCreateRoom()">创建</button>
+      <button class="btn btn-sm btn-secondary mt-1" onclick="hideForms()" style="width:auto;margin:8px auto 0">返回</button>
+    </div>
+
+    <div id="join-form" class="room-panel hidden">
+      <div class="card-title">加入房间</div>
+      <div class="form-group"><label>房间码</label><input id="join-code" maxlength="6" placeholder="输入4位房间码" style="text-transform:uppercase;letter-spacing:4px;font-weight:700;text-align:center;font-size:20px"></div>
+      <div class="form-group"><label>你的昵称</label><input id="join-name" maxlength="10" placeholder="输入昵称"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:4px 0 12px;font-size:13px;color:var(--g500)">
+        <input type="checkbox" id="join-relay-mode" style="width:auto;margin:0">
+        <label for="join-relay-mode" style="cursor:pointer">🔄 中继模式（连接困难时勾选）</label>
+      </div>
+      <button class="btn btn-primary" onclick="doJoinRoom(1, document.getElementById('join-relay-mode').checked)">加入</button>
+      <button class="btn btn-sm btn-secondary mt-1" onclick="hideForms()" style="width:auto;margin:8px auto 0">返回</button>
+      <div id="join-error" class="error-box hidden"></div>
+    </div>
+
+    <div id="waiting-room" class="room-panel hidden">
+      <div class="card-title">房间已创建</div>
+      <div class="room-code-display" id="room-code-display"></div>
+      <div class="room-code-hint">将此房间码分享给其他玩家</div>
+      <ul class="player-list" id="waiting-player-list"></ul>
+      <div id="waiting-hint" class="text-muted" style="font-size:13px;margin:8px 0">等待玩家加入<span class="wd"></span></div>
+      <button class="btn btn-success" id="start-game-btn" onclick="doStartGame()" disabled>至少4人才能开始</button>
+    </div>
+
+    <div id="joined-waiting" class="room-panel hidden">
+      <div class="card-title">已加入房间</div>
+      <div style="text-align:center;font-size:14px;color:var(--g500);margin-bottom:4px">房间码</div>
+      <div style="text-align:center;font-size:28px;font-weight:800;color:var(--primary);letter-spacing:4px;margin-bottom:16px" id="joined-room-code"></div>
+      <ul class="player-list" id="joined-player-list"></ul>
+      <div class="text-muted" style="font-size:13px;margin-top:8px">等待房主开始游戏<span class="wd"></span></div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="game-screen" class="screen">
+    <div id="status-bar">
+      <div class="status-row">
+        <div>第 <span id="game-round">1</span> 轮 · 出题者：<span id="captain-name"></span></div>
+        <div class="score-display"><span class="score-uc">🦄 <span id="uc">0</span></span><span class="score-pc">💩 <span id="pc">0</span></span></div>
+      </div>
+      <div class="status-row">
+        <div class="round-dots" id="round-dots"></div>
+        <div style="font-size:12px;color:var(--g400)">房间：<span id="game-room-code"></span><span class="conn-dot" id="conn-dot"></span></div>
+      </div>
+    </div>
+    <div id="game-layout">
+      <div class="player-sidebar" id="player-sidebar">
+        <div class="sidebar-title">👥 玩家列表</div>
+        <div id="sidebar-player-list"></div>
+      </div>
+      <div id="game-content" style="flex:1;min-width:0"></div>
+    </div>
+  </div>
+</div>
+
+<div id="connecting-overlay" class="connecting-overlay hidden">
+  <div class="spinner"></div>
+  <div style="font-weight:600;color:var(--g600);margin-bottom:8px" id="connecting-text">正在连接...</div>
+  <div class="conn-steps" id="conn-steps">
+    <div class="step" id="conn-step1"><span class="step-icon">⏳</span> 连接信令服务器</div>
+    <div class="step" id="conn-step2"><span class="step-icon">⏳</span> 连接房主</div>
+    <div class="step" id="conn-step3"><span class="step-icon">⏳</span> 建立P2P通道</div>
+  </div>
+  <div id="ice-diag-live" style="margin-top:12px;font-size:11px;color:var(--g400);max-width:320px;max-height:80px;overflow-y:auto;text-align:left;word-break:break-all"></div>
+</div>
+
+<div id="peek-overlay" class="peek-overlay hidden" onclick="closePeek()">
+  <div class="peek-modal" onclick="event.stopPropagation()">
+    <div class="peek-name" id="peek-name"></div>
+    <div class="peek-number" id="peek-number"></div>
+    <div style="font-size:13px;color:var(--g400);margin-bottom:16px">记住你的数字，不要告诉别人！</div>
+    <button class="btn btn-success btn-sm" onclick="confirmPeek()" style="width:auto">已记住</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// 脑洞量表 Top Ten Online — Complete Game Engine
+// ============================================================
+
+// ---- Utilities ----
+const genCode = () => {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = ''; for (let i = 0; i < 4; i++) s += c[Math.random() * c.length | 0];
+  return s;
+};
+const shuffle = a => {
+  const b = [...a];
+  for (let i = b.length - 1; i > 0; i--) { const j = Math.random() * (i+1) | 0; [b[i],b[j]] = [b[j],b[i]]; }
+  return b;
+};
+const toast = (msg, dur=2500) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), dur);
+};
+const showConn = (txt='正在连接...') => {
+  document.getElementById('connecting-text').textContent = txt;
+  document.getElementById('connecting-overlay').classList.remove('hidden');
+  ['conn-step1','conn-step2','conn-step3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'step'; el.querySelector('.step-icon').textContent = '⏳'; }
+  });
+};
+const hideConn = () => document.getElementById('connecting-overlay').classList.add('hidden');
+
+// ---- Game State ----
+const GS = {
+  roomCode: '', players: [], round: 1, captainIndex: 0,
+  topic: { text: '', low: '', high: '' },
+  unicorns: 0, poops: 0, totalUnicorns: 0,
+  phase: 'lobby', flippedCards: [], revealedCards: [], flipVersion: 0,
+  isHost: false, myId: '', myName: '', myNumber: null,
+};
+
+// ---- Network ----
+function makePeerConfig(relayOnly) {
+  const iceServers = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
+    { urls: 'stun:stun.stunprotocol.org:3478' },
+    { urls: 'stun:numb.viagenie.ca:3478' },
+    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
+    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
+    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
+    { urls: 'turn:staticauth.openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
+    { urls: 'turn:staticauth.openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
+    { urls: 'stun:global.stun.twilio.com:3478' },
+  ];
+  const config = { iceServers };
+  if (relayOnly) config.iceTransportPolicy = 'relay';
+  return { config, debug: 0 };
+}
+
+const CONN_TIMEOUT_PEERJS = 20000;
+const CONN_TIMEOUT_HOST = 30000;
+const HEARTBEAT_INTERVAL = 8000;
+const HEARTBEAT_TIMEOUT = 15000;
+
+let peer = null;
+const conns = {};
+let heartbeatTimer = null;
+let heartbeatTimeout = null;
+let iceDiagLog = [];
+
+function hostPeerId(code) { return 'bht-' + code; }
+
+// ---- ICE Diagnostics ----
+function logICE(msg) {
+  const ts = new Date().toLocaleTimeString();
+  iceDiagLog.push(`[${ts}] ${msg}`);
+  if (iceDiagLog.length > 50) iceDiagLog.shift();
+  console.log(`[ICE] ${msg}`);
+  const diagEl = document.getElementById('ice-diag-log');
+  if (diagEl) diagEl.textContent = iceDiagLog.slice(-12).join('\n');
+  const liveEl = document.getElementById('ice-diag-live');
+  if (liveEl) liveEl.textContent = iceDiagLog.slice(-5).map(l => l.replace(/^\[[^\]]+\]\s*/, '')).join(' · ');
+}
+
+function monitorICEConnection(conn, label) {
+  if (!conn || !conn.peerConnection) return;
+  const pc = conn.peerConnection;
+  pc.oniceconnectionstatechange = () => { logICE(`${label} ICE: ${pc.iceConnectionState}`); };
+  pc.onicegatheringstatechange = () => { logICE(`${label} gathering: ${pc.iceGatheringState}`); };
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      const c = e.candidate;
+      logICE(`${label} candidate: ${c.type||'?'}/${c.protocol||'?'} ${c.address||'hidden'}`);
+    } else { logICE(`${label} gathering complete`); }
+  };
+}
+
+// ---- Heartbeat ----
+function startHeartbeat() {
+  stopHeartbeat();
+  heartbeatTimer = setInterval(() => {
+    if (GS.isHost) {
+      Object.values(conns).forEach(c => { if (c.open) c.send({ type: 'ping' }); });
+    } else {
+      const c = conns.host;
+      if (c?.open) c.send({ type: 'ping' });
+    }
+    clearTimeout(heartbeatTimeout);
+    heartbeatTimeout = setTimeout(() => {
+      console.warn('[Heartbeat] No pong');
+      document.getElementById('conn-dot')?.classList.add('off');
+    }, HEARTBEAT_TIMEOUT);
+  }, HEARTBEAT_INTERVAL);
+}
+function stopHeartbeat() {
+  clearInterval(heartbeatTimer); heartbeatTimer = null;
+  clearTimeout(heartbeatTimeout); heartbeatTimeout = null;
+}
+function handlePong() {
+  clearTimeout(heartbeatTimeout);
+  document.getElementById('conn-dot')?.classList.remove('off');
+}
+
+// ---- Connection Progress ----
+function updateConnProgress(step) {
+  const el = document.getElementById('connecting-text');
+  if (!el) return;
+  const labels = { step1: '正在连接信令服务器…', step2: '正在连接房主…', step3: '正在建立P2P通道…' };
+  el.textContent = labels[step] || '正在连接...';
+  const stepMap = { step1: 'conn-step1', step2: 'conn-step2', step3: 'conn-step3' };
+  const order = ['step1', 'step2', 'step3'];
+  const idx = order.indexOf(step);
+  order.forEach((s, i) => {
+    const stepEl = document.getElementById(stepMap[s]);
+    if (!stepEl) return;
+    const icon = stepEl.querySelector('.step-icon');
+    if (i < idx) { stepEl.className = 'step done'; icon.textContent = '✅'; }
+    else if (i === idx) { stepEl.className = 'step active'; icon.textContent = '🔄'; }
+    else { stepEl.className = 'step'; icon.textContent = '⏳'; }
+  });
+}
+
+// ---- Error Classification ----
+function classifyError(source, err, wasRelay) {
+  const errType = err?.type || '';
+  const errMsg = typeof err === 'string' ? err : (err?.message || String(err));
+  const errors = {
+    peerjs_timeout: {
+      title: '❌ 信令服务器连接失败',
+      reason: '无法连接到 PeerJS 云服务（20秒超时）',
+      solutions: [
+        '检查网络是否正常，能否访问外网',
+        '公司/校园网可能被防火墙屏蔽了 WebSocket，尝试手机热点',
+        '稍后再试（PeerJS 免费云服务偶尔不稳定）',
+        '使用 Chrome/Edge 浏览器（兼容性最好）',
+      ]
+    },
+    host_timeout: {
+      title: wasRelay ? '❌ 中继模式连接也失败了' : '❌ 房间连接超时',
+      reason: wasRelay
+        ? errMsg + ' — TURN 中继服务器也可能被屏蔽'
+        : errMsg + ' — 可能是 NAT 穿透失败',
+      solutions: wasRelay ? [
+        '你的网络可能屏蔽了所有 TURN 中继服务器',
+        '尝试切换到手机热点（4G/5G 网络NAT更友好）',
+        '确认浏览器没有禁止 WebRTC（某些隐私插件会禁用）',
+        '检查是否开启了 VPN/代理，尝试关闭后重试',
+        '公司/校园网可能封锁了非标准端口，只能用手机热点',
+      ] : [
+        '确认房间码是否正确',
+        '房主可能已关闭页面或掉线',
+        '系统将自动尝试"中继模式"（通过TURN服务器转发）',
+        '如果反复失败，双方都尝试切换网络（如手机热点）',
+        '同一局域网请确保没有 AP 隔离',
+      ]
+    },
+    'peer-unavailable': {
+      title: '❌ 房间不存在',
+      reason: '房间码对应的房主不在线',
+      solutions: [
+        '检查房间码是否输入正确',
+        '房主可能已关闭页面',
+        '让房主确认页面是否还开着',
+        '让房主重新创建房间并分享新房码',
+      ]
+    },
+    'network': {
+      title: '❌ 网络错误',
+      reason: errMsg,
+      solutions: ['检查网络连接', '关闭VPN/代理重试', '公司/校园网可能屏蔽WebRTC', '尝试手机热点']
+    },
+    'browser-incompatible': {
+      title: '❌ 浏览器不兼容',
+      reason: '当前浏览器不支持 WebRTC',
+      solutions: ['请使用 Chrome/Edge/Firefox 最新版', 'Safari对WebRTC支持有限，建议换Chrome']
+    },
+    'unavailable-id': {
+      title: '❌ 房间码冲突',
+      reason: '该房间码已被使用',
+      solutions: ['返回重新创建，系统会自动分配新房码']
+    },
+    conn_error: {
+      title: '❌ P2P连接失败',
+      reason: errMsg,
+      solutions: ['房主网络可能不允许入站连接', '双方都需能访问外网', '房主刷新页面重建房间', '尝试手机热点']
+    },
+    peer_error: {
+      title: '❌ 连接失败',
+      reason: `[${errType}] ${errMsg}`,
+      solutions: ['检查网络连接', '刷新页面重试', '持续失败请切换网络（手机热点）', '确认浏览器未禁用WebRTC']
+    },
+  };
+  let key = source;
+  if (errType && errors[errType]) key = errType;
+  if (!errors[key]) key = 'peer_error';
+  return { source: key, ...errors[key], rawError: errMsg };
+}
+
+function showErrorModal(errorInfo) {
+  const old = document.getElementById('error-modal-overlay');
+  if (old) old.remove();
+  const diagText = iceDiagLog.length > 0
+    ? `<div style="margin-top:16px;border-top:1px solid var(--g200);padding-top:12px">
+         <p style="font-weight:600;margin-bottom:8px">📋 连接诊断日志：</p>
+         <pre id="ice-diag-log" style="font-size:11px;color:var(--g500);background:var(--g100);padding:8px;border-radius:var(--rs);max-height:150px;overflow-y:auto;white-space:pre-wrap">${iceDiagLog.join('\n')}</pre>
+       </div>` : '';
+  const overlay = document.createElement('div');
+  overlay.id = 'error-modal-overlay';
+  overlay.className = 'error-modal-overlay';
+  overlay.innerHTML = `
+    <div class="error-modal">
+      <div class="error-modal-title">${errorInfo.title}</div>
+      <div class="error-modal-body">
+        <div class="error-reason">${errorInfo.reason}</div>
+        <p style="margin-top:12px;font-weight:600">可能的解决方案：</p>
+        <ul>${errorInfo.solutions.map(s => `<li>${s}</li>`).join('')}</ul>
+        ${diagText}
+      </div>
+      <div class="error-modal-actions">
+        <button class="btn btn-sm btn-secondary" onclick="this.closest('.error-modal-overlay').remove()">关闭</button>
+        <button class="btn btn-sm btn-primary" onclick="retryJoin(this)">重试连接</button>
+        <button class="btn btn-sm btn-warn" onclick="retryWithRelay(this)">🔄 中继重试</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ---- Host ----
+function initHost(code, relayOnly) {
+  return new Promise((resolve, reject) => {
+    const pid = hostPeerId(code);
+    const config = makePeerConfig(relayOnly);
+    peer = new Peer(pid, config);
+    if (relayOnly) logICE('Host: RELAY-ONLY mode');
+    const peerOpenTimeout = setTimeout(() => {
+      reject(classifyError('peerjs_timeout', '无法连接到 PeerJS 信令服务器（20秒超时）'));
+    }, CONN_TIMEOUT_PEERJS);
+    peer.on('open', () => {
+      clearTimeout(peerOpenTimeout);
+      logICE('Host: PeerJS cloud connected');
+      startHeartbeat();
+      resolve();
+    });
+    peer.on('connection', conn => {
+      conn.on('open', () => {
+        conns[conn.peer] = conn;
+        bindHostConn(conn);
+        monitorICEConnection(conn, 'Host←Client');
+      });
+      if (conn.open) { conns[conn.peer] = conn; bindHostConn(conn); monitorICEConnection(conn, 'Host←Client'); }
+    });
+    peer.on('error', e => {
+      clearTimeout(peerOpenTimeout);
+      logICE('Host error: ' + (e.type||'') + ' ' + (e.message||''));
+      if (e.type === 'unavailable-id') {
+        reject(classifyError('peer_error', { type: 'unavailable-id', message: '房间码已被使用' }));
+      } else {
+        reject(classifyError('peer_error', e));
+      }
+    });
+    peer.on('disconnected', () => {
+      if (peer && !peer.destroyed) { logICE('Host: disconnected, reconnecting...'); peer.reconnect(); }
+    });
+  });
+}
+
+function bindHostConn(conn) {
+  conn.on('data', data => {
+    if (data.type === 'ping') { conn.send({ type: 'pong' }); return; }
+    if (data.type === 'pong') { handlePong(); return; }
+    onClientMsg(conn.peer, data);
+  });
+  conn.on('close', () => {
+    const p = GS.players.find(x => x.id === conn.peer);
+    if (p) {
+      toast(p.name + ' 离开了房间');
+      if (GS.phase === 'lobby') {
+        GS.players = GS.players.filter(x => x.id !== conn.peer);
+        broadcast({ type: 'player_list', players: GS.players.map(p => ({ name: p.name, isHost: p.isHost })) });
+        updateWaitingRoom();
+      }
+    }
+    delete conns[conn.peer];
+  });
+}
+
+// ---- Client ----
+function initClient(code, relayOnly) {
+  return new Promise((resolve, reject) => {
+    const config = makePeerConfig(relayOnly);
+    peer = new Peer(undefined, config);
+    if (relayOnly) logICE('Client: RELAY-ONLY mode');
+    updateConnProgress('step1');
+    const peerOpenTimeout = setTimeout(() => {
+      reject(classifyError('peerjs_timeout', '无法连接到 PeerJS 信令服务器（20秒超时）'));
+    }, CONN_TIMEOUT_PEERJS);
+    peer.on('open', myId => {
+      clearTimeout(peerOpenTimeout);
+      GS.myId = myId;
+      logICE('Client: PeerJS cloud connected');
+      updateConnProgress('step2');
+      const hid = hostPeerId(code);
+      const conn = peer.connect(hid, { reliable: true });
+      logICE('Client: connecting to ' + hid);
+      const connTimeout = setTimeout(() => {
+        if (!conn.open) {
+          conn.close();
+          logICE('Client: TIMEOUT');
+          reject(classifyError('host_timeout', `连接房间 ${code} 超时（30秒）`, relayOnly));
+        }
+      }, CONN_TIMEOUT_HOST);
+      conn.on('open', () => {
+        clearTimeout(connTimeout);
+        updateConnProgress('step3');
+        logICE('Client: P2P OPEN!');
+        conns.host = conn;
+        monitorICEConnection(conn, 'Client→Host');
+        conn.on('data', data => {
+          if (data.type === 'ping') { conn.send({ type: 'pong' }); return; }
+          if (data.type === 'pong') { handlePong(); return; }
+          onHostMsg(data);
+        });
+        conn.on('close', () => {
+          toast('与房主断开连接');
+          document.getElementById('conn-dot')?.classList.add('off');
+          stopHeartbeat();
+        });
+        startHeartbeat();
+        resolve();
+      });
+      conn.on('error', err => {
+        clearTimeout(connTimeout);
+        logICE('Client conn error: ' + (err.message||String(err)));
+        reject(classifyError('conn_error', err));
+      });
+    });
+    peer.on('error', err => {
+      clearTimeout(peerOpenTimeout);
+      logICE('Client error: ' + (err.type||'') + ' ' + (err.message||''));
+      if (err.type === 'peer-unavailable') reject(classifyError('peer-unavailable', err));
+      else reject(classifyError('peer_error', err));
+    });
+    peer.on('disconnected', () => {
+      if (peer && !peer.destroyed) { logICE('Client: disconnected, reconnecting...'); peer.reconnect(); }
+    });
+  });
+}
+
+// ---- Send Helpers ----
+function broadcast(data) {
+  if (!GS.isHost) return;
+  Object.values(conns).forEach(c => { if (c.open) c.send(data); });
+}
+function sendHost(data) {
+  if (GS.isHost) return;
+  const c = conns.host; if (c?.open) c.send(data);
+}
+function sendClient(pid, data) {
+  const c = conns[pid]; if (c?.open) c.send(data);
+}
+
+// ---- Host receives from client ----
+function onClientMsg(pid, data) {
+  switch (data.type) {
+    case 'join': {
+      if (GS.players.length >= 9) { sendClient(pid, { type: 'error', message: '房间已满' }); return; }
+      if (GS.phase !== 'lobby') { sendClient(pid, { type: 'error', message: '游戏已开始' }); return; }
+      GS.players.push({ id: pid, name: data.name, number: null, peeked: false, isHost: false });
+      sendClient(pid, { type: 'joined', playerId: pid, roomCode: GS.roomCode,
+        players: GS.players.map(p => ({ name: p.name, isHost: p.isHost })) });
+      broadcast({ type: 'player_list', players: GS.players.map(p => ({ name: p.name, isHost: p.isHost })) });
+      updateWaitingRoom();
+      break;
+    }
+    case 'peek_ack': {
+      const p = GS.players.find(x => x.id === pid);
+      if (p) p.peeked = true;
+      broadcast({ type: 'peek_status', peeked: GS.players.map(x => ({ id: x.id, name: x.name, peeked: x.peeked })) });
+      if (GS.players.every(x => x.peeked)) setTimeout(() => goPhase('answer'), 500);
+      break;
+    }
+    case 'topic_submit': {
+      if (GS.players[GS.captainIndex]?.id === pid) { GS.topic = data.topic; goPhase('peek'); }
+      break;
+    }
+    case 'flip_request': {
+      if (GS.players[GS.captainIndex]?.id === pid) {
+        GS.phase = 'flip'; GS.flippedCards = []; GS.flipVersion++; renderGame();
+        broadcast({ type: 'phase_change', phase: 'flip', extra: { captainIndex: GS.captainIndex, flippedCards: [], flipVersion: GS.flipVersion } });
+        sendClient(pid, { type: 'all_numbers', players: GS.players.map(p => ({ id: p.id, name: p.name, number: p.number })) });
+      }
+      break;
+    }
+    case 'flip_card': {
+      if (GS.phase === 'flip' && GS.players[GS.captainIndex]?.id === pid) {
+        const flipData = data.flipData;
+        if (data.flipVersion !== undefined && data.flipVersion !== GS.flipVersion) break;
+        const exists = GS.flippedCards.find(f => f.id === flipData.id);
+        if (exists) break;
+        GS.flippedCards.push(flipData);
+        if (!flipData.correct && GS.unicorns > 0) {
+          GS.unicorns--;
+          GS.poops++;
+        }
+        if (GS.unicorns === 0) {
+          broadcast({ type: 'game_fail', round: GS.round, unicorns: 0, poops: GS.poops });
+          GS.phase = 'gameFail';
+          renderGame(); updateBar();
+          break;
+        }
+        broadcast({ type: 'flip_card', flipData, flipVersion: GS.flipVersion, unicorns: GS.unicorns, poops: GS.poops });
+        renderGame(); updateBar();
+      }
+      break;
+    }
+    case 'finish_flip': {
+      if (GS.players[GS.captainIndex]?.id === pid) {
+        GS.phase = 'reveal';
+        GS.revealedCards = [...GS.flippedCards];
+        broadcast({ type: 'phase_change', phase: 'reveal', extra: { flippedCards: GS.flippedCards, poops: GS.poops } });
+        renderGame();
+      }
+      break;
+    }
+    case 'round_end_request': {
+      if (GS.players[GS.captainIndex]?.id === pid || GS.isHost) {
+        GS.phase = 'roundEnd';
+        broadcast({ type: 'round_end', unicorns: GS.unicorns, poops: GS.poops });
+        renderGame(); updateBar();
+      }
+      break;
+    }
+    case 'next_round': {
+      const nextIdx = (GS.captainIndex + 1) % GS.players.length;
+      if (GS.players[nextIdx]?.id === pid || pid === GS.myId) doNextRound();
+      break;
+    }
+  }
+}
+
+// ---- Client receives from host ----
+function onHostMsg(data) {
+  switch (data.type) {
+    case 'error':
+      document.getElementById('join-error').textContent = data.message;
+      document.getElementById('join-error').classList.remove('hidden');
+      hideConn(); break;
+    case 'kicked':
+      toast('你已被房主踢出房间');
+      setTimeout(() => backToLobby(), 1500);
+      break;
+    case 'joined':
+      GS.myId = data.playerId; GS.roomCode = data.roomCode;
+      updateJoinedList(data.players);
+      document.getElementById('joined-room-code').textContent = data.roomCode;
+      document.getElementById('create-form').classList.add('hidden');
+      document.getElementById('join-form').classList.add('hidden');
+      document.getElementById('joined-waiting').classList.remove('hidden');
+      hideConn(); break;
+    case 'player_list':
+      updateJoinedList(data.players); break;
+    case 'game_start':
+      GS.players = data.players; GS.round = data.round; GS.captainIndex = data.captainIndex;
+      GS.unicorns = data.unicorns; GS.poops = data.poops; GS.totalUnicorns = data.totalUnicorns;
+      GS.phase = data.phase; GS.topic = data.topic;
+      enterGame(); break;
+    case 'your_number':
+      GS.myNumber = data.number;
+      const me = GS.players.find(p => p.id === GS.myId);
+      if (me) me.number = data.number;
+      renderGame(); break;
+    case 'all_numbers':
+      data.players.forEach(p => {
+        const player = GS.players.find(x => x.id === p.id);
+        if (player && player.id !== GS.myId) player.number = p.number;
+      });
+      renderGame(); break;
+    case 'state_update':
+      Object.assign(GS, data.state);
+      if (data.state.players) {
+        const me2 = data.state.players.find(p => p.id === GS.myId);
+        if (me2) GS.myNumber = me2.number;
+      }
+      renderGame(); updateBar(); break;
+    case 'peek_status':
+      updateClientPeek(data.peeked); break;
+    case 'phase_change':
+      GS.phase = data.phase;
+      if (GS.phase === 'peek' && amCaptain()) {
+        const me = myPlayer(); if (me) { me.number = null; me.peeked = true; }
+        GS.myNumber = null;
+      }
+      if (GS.phase === 'flip') {
+        GS.flippedCards = data.extra?.flippedCards ? [...data.extra.flippedCards] : [];
+        if (data.extra?.flipVersion !== undefined) GS.flipVersion = data.extra.flipVersion;
+      } else if (data.extra) {
+        Object.assign(GS, data.extra);
+      }
+      if (GS.phase === 'reveal') {
+        GS.revealedCards = data.extra?.flippedCards ? [...data.extra.flippedCards] : [];
+        GS.poops = data.extra?.poops || GS.poops;
+      }
+      renderGame(); updateBar(); break;
+    case 'flip_card':
+      if (data.flipVersion !== undefined && data.flipVersion !== GS.flipVersion) break;
+      const exists = GS.flippedCards.find(f => f.id === data.flipData.id);
+      if (!exists) {
+        GS.flippedCards.push(data.flipData);
+      }
+      if (data.unicorns != null) GS.unicorns = data.unicorns;
+      if (data.poops != null) GS.poops = data.poops;
+      renderGame(); updateBar(); break;
+    case 'round_end':
+      GS.phase = 'roundEnd'; GS.unicorns = data.unicorns; GS.poops = data.poops;
+      renderGame(); updateBar(); break;
+    case 'game_over':
+      GS.phase = 'gameOver'; GS.unicorns = data.unicorns; GS.poops = data.poops;
+      renderGame(); updateBar(); break;
+    case 'game_fail':
+      GS.phase = 'gameFail'; GS.round = data.round || GS.round; GS.unicorns = 0; GS.poops = data.poops || GS.poops;
+      renderGame(); updateBar(); break;
+  }
+}
+
+// ---- Retry Functions ----
+async function retryJoin(btnEl, attemptCount, relayOnly) {
+  const overlay = btnEl?.closest('.error-modal-overlay');
+  if (overlay) overlay.remove();
+  const code = document.getElementById('join-code')?.dataset.lastCode || document.getElementById('join-code')?.value.trim().toUpperCase();
+  const name = document.getElementById('join-name')?.dataset.lastName || document.getElementById('join-name')?.value.trim();
+  if (!code || !name) return;
+  attemptCount = attemptCount || 1;
+  relayOnly = relayOnly || false;
+  if (attemptCount >= 3 && !relayOnly) relayOnly = true;
+  GS.isHost = false; GS.myName = name;
+  const modeLabel = relayOnly ? ' [中继模式]' : '';
+  showConn(`正在重新连接... (第${attemptCount}次)${modeLabel}`);
+  iceDiagLog = [];
+  try {
+    await initClient(code, relayOnly);
+    sendHost({ type: 'join', name });
+  } catch (e) {
+    hideConn();
+    if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+    stopHeartbeat();
+    const errInfo = e?.title ? e : classifyError('peer_error', e, relayOnly);
+    if (attemptCount < 5) {
+      const delay = attemptCount * 2000;
+      const nextRelay = attemptCount >= 2;
+      showConn(`${errInfo.title}，${delay/1000}秒后重试${nextRelay&&!relayOnly?'(中继)':''}...`);
+      setTimeout(() => { hideConn(); retryJoin(null, attemptCount+1, nextRelay); }, delay);
+    } else { showErrorModal(errInfo); }
+  }
+}
+
+async function retryWithRelay(btnEl) {
+  const overlay = btnEl?.closest('.error-modal-overlay');
+  if (overlay) overlay.remove();
+  const code = document.getElementById('join-code')?.dataset.lastCode || document.getElementById('join-code')?.value.trim().toUpperCase();
+  const name = document.getElementById('join-name')?.dataset.lastName || document.getElementById('join-name')?.value.trim();
+  if (!code || !name) return;
+  GS.isHost = false; GS.myName = name;
+  showConn('正在通过中继服务器连接...');
+  iceDiagLog = [];
+  try {
+    await initClient(code, true);
+    sendHost({ type: 'join', name });
+  } catch (e) {
+    hideConn();
+    if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+    stopHeartbeat();
+    showErrorModal(e?.title ? e : classifyError('host_timeout', e, true));
+  }
+}
+
+// ---- Kick Player ----
+function kickPlayer(pid) {
+  if (!GS.isHost) return;
+  const p = GS.players.find(x => x.id === pid);
+  if (!p || p.isHost) return;
+  const conn = conns[pid];
+  if (conn) { conn.send({ type: 'kicked' }); conn.close(); delete conns[pid]; }
+  GS.players = GS.players.filter(x => x.id !== pid);
+  broadcast({ type: 'player_list', players: GS.players.map(p => ({ name: p.name, isHost: p.isHost })) });
+  updateWaitingRoom();
+  toast(p.name + ' 已被踢出');
+}
+
+// ---- Helpers ----
+function myPlayer() { return GS.players.find(p => p.id === GS.myId); }
+function amCaptain() { return GS.players[GS.captainIndex]?.id === GS.myId; }
+function switchScreen(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(n + '-screen').classList.add('active');
+}
+function backToLobby() {
+  stopHeartbeat();
+  if (peer) { peer.destroy(); peer = null; }
+  Object.keys(conns).forEach(k => delete conns[k]);
+  GS.roomCode=''; GS.players=[]; GS.phase='lobby'; GS.myNumber=null; GS.flippedCards=[]; GS.revealedCards=[];
+  switchScreen('lobby');
+  document.getElementById('status-bar').style.display='none';
+  document.getElementById('waiting-room').classList.add('hidden');
+  document.getElementById('joined-waiting').classList.add('hidden');
+  document.getElementById('create-form').classList.add('hidden');
+  document.getElementById('join-form').classList.add('hidden');
+  document.getElementById('lobby-screen').querySelector('.lobby-actions').style.display='flex';
+}
+
+// ---- Lobby UI ----
+function showCreateRoom() { document.getElementById('create-form').classList.remove('hidden'); document.getElementById('join-form').classList.add('hidden'); }
+function showJoinRoom() { document.getElementById('join-form').classList.remove('hidden'); document.getElementById('create-form').classList.add('hidden'); }
+function hideForms() { document.getElementById('create-form').classList.add('hidden'); document.getElementById('join-form').classList.add('hidden'); }
+
+async function doCreateRoom(attemptCount, relayOnly) {
+  const name = document.getElementById('host-name').value.trim();
+  if (!name) { toast('请输入昵称'); return; }
+  const code = genCode();
+  GS.roomCode = code; GS.isHost = true; GS.myName = name;
+  attemptCount = attemptCount || 1;
+  relayOnly = relayOnly || false;
+  const modeLabel = relayOnly ? ' [中继模式]' : '';
+  showConn(attemptCount === 1 ? `正在创建房间...${modeLabel}` : `正在创建房间... (第${attemptCount}次)${modeLabel}`);
+  updateConnProgress('step1');
+  iceDiagLog = [];
+  try {
+    await initHost(code, relayOnly);
+    GS.myId = hostPeerId(code);
+    GS.players = [{ id: GS.myId, name, number: null, peeked: false, isHost: true }];
+    document.getElementById('room-code-display').textContent = code;
+    updateWaitingRoom();
+    document.getElementById('create-form').classList.add('hidden');
+    document.getElementById('waiting-room').classList.remove('hidden');
+    hideConn(); toast('房间创建成功！');
+  } catch (e) {
+    hideConn(); stopHeartbeat();
+    if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+    const errInfo = e?.title ? e : classifyError('peer_error', e);
+    if (attemptCount < 3 && e?.source !== 'unavailable-id') {
+      const delay = attemptCount * 2000;
+      toast(`创建失败，${delay/1000}秒后重试...`);
+      setTimeout(() => doCreateRoom(attemptCount+1, attemptCount>=2), delay);
+    } else {
+      showErrorModal({ title: '❌ 创建房间失败', reason: errInfo.reason||String(e),
+        solutions: ['PeerJS 云服务可能暂时不可用', '检查网络连接', '公司/校园网可能屏蔽WebSocket，尝试手机热点', '刷新页面重试'] });
+    }
+  }
+}
+
+async function doJoinRoom(attemptCount, relayOnly) {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  const name = document.getElementById('join-name').value.trim();
+  document.getElementById('join-error').classList.add('hidden');
+  if (code.length < 4) { toast('请输入4位房间码'); return; }
+  if (!name) { toast('请输入昵称'); return; }
+  GS.isHost = false; GS.myName = name;
+  attemptCount = attemptCount || 1;
+  relayOnly = relayOnly || false;
+  if (attemptCount >= 4 && !relayOnly) { relayOnly = true; logICE('Auto-switch to RELAY'); }
+  const modeLabel = relayOnly ? ' [中继模式]' : '';
+  showConn(attemptCount === 1 ? `正在连接房间...${modeLabel}` : `正在连接房间... (第${attemptCount}次)${modeLabel}`);
+  iceDiagLog = [];
+  document.getElementById('join-code').dataset.lastCode = code;
+  document.getElementById('join-name').dataset.lastName = name;
+  try {
+    await initClient(code, relayOnly);
+    sendHost({ type: 'join', name });
+  } catch (e) {
+    hideConn();
+    if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+    stopHeartbeat();
+    const errInfo = e?.title ? e : classifyError('peer_error', e, relayOnly);
+    if (attemptCount < 6) {
+      const delay = Math.min(attemptCount, 3) * 2000;
+      const nextRelay = attemptCount >= 3;
+      const hint = nextRelay && !relayOnly ? '，将切换中继模式' : '';
+      toast(`连接失败，${delay/1000}秒后重试${hint}...`);
+      setTimeout(() => doJoinRoom(attemptCount+1, nextRelay), delay);
+    } else { showErrorModal(errInfo); }
+  }
+}
+
+function updateWaitingRoom() {
+  const list = document.getElementById('waiting-player-list');
+  list.innerHTML = GS.players.map(p => {
+    let actions = '';
+    if (p.isHost) actions = '<span class="host-tag">房主</span>';
+    else actions = `<button class="kick-btn" onclick="kickPlayer('${p.id}')">踢出</button>`;
+    return `<li><span class="avatar">${p.name[0]}</span>${p.name}${actions}</li>`;
+  }).join('');
+  const btn = document.getElementById('start-game-btn');
+  btn.disabled = GS.players.length < 4;
+  btn.textContent = GS.players.length >= 4
+    ? `开始游戏 (${GS.players.length}人)`
+    : `至少4人才能开始 (当前${GS.players.length}人)`;
+}
+
+function updateJoinedList(players) {
+  const list = document.getElementById('joined-player-list');
+  list.innerHTML = players.map(p =>
+    `<li><span class="avatar">${p.name[0]}</span>${p.name}${p.isHost ? '<span class="host-tag">房主</span>' : ''}</li>`
+  ).join('');
+}
+
+// ---- Start Game ----
+function doStartGame() {
+  if (GS.players.length < 4) return;
+  GS.round = 1; GS.captainIndex = 0;
+  GS.unicorns = GS.players.length; GS.totalUnicorns = GS.unicorns; GS.poops = 0;
+  GS.phase = 'topic';
+  broadcast({
+    type: 'game_start',
+    players: GS.players.map(p => ({ ...p, number: null, peeked: false })),
+    round: GS.round, captainIndex: GS.captainIndex,
+    unicorns: GS.unicorns, poops: GS.poops, totalUnicorns: GS.totalUnicorns,
+    phase: 'topic', topic: GS.topic
+  });
+  enterGame();
+}
+
+function enterGame() {
+  switchScreen('game');
+  document.getElementById('status-bar').style.display = 'block';
+  updateBar(); updateSidebar(); renderGame();
+}
+
+// ---- Status Bar ----
+function updateBar() {
+  const dots = document.getElementById('round-dots');
+  dots.innerHTML = `<div class="round-dot current" style="width:auto;padding:0 8px;font-size:12px">R${GS.round}</div>`;
+  document.getElementById('uc').textContent = GS.unicorns;
+  document.getElementById('pc').textContent = GS.poops;
+  document.getElementById('game-room-code').textContent = GS.roomCode;
+  document.getElementById('captain-name').textContent = GS.players[GS.captainIndex]?.name || '';
+  updateSidebar();
+}
+
+// ---- Player Sidebar ----
+function updateSidebar() {
+  const list = document.getElementById('sidebar-player-list');
+  if (!list) return;
+  list.innerHTML = GS.players.map((p, i) => {
+    const isMe = p.id === GS.myId;
+    const isCaptain = i === GS.captainIndex;
+    let roleText = '';
+    if (isCaptain) roleText = '🎯 出题者';
+    else if (p.isHost) roleText = '👑 房主';
+    
+    return `<div class="sidebar-player ${isCaptain ? 'current-captain' : ''} ${isMe ? 'me' : ''}">
+      <span class="avatar sidebar-avatar">${p.name[0]}</span>
+      <div class="sidebar-info">
+        <div class="sidebar-name">${p.name}${isMe ? '（你）' : ''}</div>
+        <div class="sidebar-role">${roleText || '玩家'}</div>
+      </div>
+      <span class="sidebar-status-dot ${isCaptain ? 'captain' : 'online'}"></span>
+    </div>`;
+  }).join('');
+}
+
+// ---- Phase Transitions ----
+function goPhase(phase) {
+  GS.phase = phase;
+  if (phase === 'peek') {
+    // 出题者不分配数字，只给非出题者分配
+    const nonCaptainPlayers = GS.players.filter((_, i) => i !== GS.captainIndex);
+    const nums = shuffle([1,2,3,4,5,6,7,8,9,10]).slice(0, nonCaptainPlayers.length);
+    nonCaptainPlayers.forEach((p, i) => { p.number = nums[i]; p.peeked = false; });
+    const captain = GS.players[GS.captainIndex];
+    if (captain) { captain.number = null; captain.peeked = true; }
+    GS.myNumber = myPlayer()?.number ?? null;
+  }
+  if (GS.isHost) {
+    broadcast({ type: 'phase_change', phase, extra: {
+      topic: GS.topic, captainIndex: GS.captainIndex, round: GS.round
+    }});
+    if (phase === 'peek') {
+      GS.players.forEach(p => {
+        if (!p.isHost && p.number != null) sendClient(p.id, { type: 'your_number', number: p.number });
+      });
+      const captain = GS.players[GS.captainIndex];
+      if (captain && !captain.isHost) {
+        sendClient(captain.id, { type: 'peek_status', peeked: GS.players.map(x => ({ id: x.id, name: x.name, peeked: x.peeked })) });
+      }
+    }
+  }
+  renderGame(); updateBar();
+}
+
+// ---- Render Game Content ----
+function renderGame() {
+  const el = document.getElementById('game-content');
+  const renderers = {
+    topic: renderTopic, peek: renderPeek, answer: renderAnswer,
+    flip: renderFlip, reveal: renderReveal, roundEnd: renderRoundEnd,
+    gameOver: renderGameOver, gameFail: renderGameFail
+  };
+  el.innerHTML = (renderers[GS.phase] || (() => ''))();
+}
+
+function topicCard() {
+  return `<div class="topic-card">
+    <div class="topic-text">${GS.topic.text}</div>
+    <div class="topic-range"><span>1</span> = ${GS.topic.low}　→　<span>10</span> = ${GS.topic.high}</div>
+  </div>`;
+}
+
+// ---- TOPIC PHASE ----
+function renderTopic() {
+  const cap = GS.players[GS.captainIndex];
+  if (amCaptain()) return `
+    <div class="card">
+      <div class="card-title">🎯 你是出题者</div>
+      <p style="font-size:14px;color:var(--g500);margin-bottom:16px">请输入题目，并说明数字1和数字10分别代表什么</p>
+      <div class="form-group"><label>题目</label><input id="topic-text" maxlength="100" placeholder="例如：你在汤圆里放了什么创新馅料？"></div>
+      <div class="form-group"><label>数字 1 代表（最弱/最差/最…）</label><input id="topic-low" maxlength="30" placeholder="例如：最恶心"></div>
+      <div class="form-group"><label>数字 10 代表（最强/最好/最…）</label><input id="topic-high" maxlength="30" placeholder="例如：最多人想吃"></div>
+      <button class="btn btn-primary" onclick="submitTopic()">确认出题</button>
+    </div>`;
+  return `
+    <div class="card text-center" style="padding:40px 20px">
+      <div style="font-size:48px;margin-bottom:16px">🎯</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px">${cap.name} 正在出题</div>
+      <div class="text-muted">请稍候<span class="wd"></span></div>
+    </div>`;
+}
+
+function submitTopic() {
+  const text = document.getElementById('topic-text').value.trim();
+  const low = document.getElementById('topic-low').value.trim();
+  const high = document.getElementById('topic-high').value.trim();
+  if (!text || !low || !high) { toast('请填写完整'); return; }
+  GS.topic = { text, low, high };
+  if (GS.isHost) { goPhase('peek'); }
+  else {
+    sendHost({ type: 'topic_submit', topic: { text, low, high } });
+    document.getElementById('game-content').innerHTML = `
+      <div class="card text-center" style="padding:40px 20px">
+        <div style="font-size:48px;margin-bottom:16px">✅</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px">题目已提交</div>
+        <div class="text-muted">等待数字分配<span class="wd"></span></div>
+      </div>`;
+  }
+}
+
+// ---- PEEK PHASE ----
+function renderPeek() {
+  let h = topicCard();
+  const me = myPlayer();
+  const myNum = me?.number ?? GS.myNumber;
+  if (amCaptain()) {
+    h += `<div class="card text-center" style="padding:24px">
+      <div style="font-size:48px;margin-bottom:8px">🎯</div>
+      <div style="font-size:16px;font-weight:700;color:var(--primary)">你是出题者</div>
+      <div style="font-size:13px;color:var(--g400);margin-top:4px">无需查看数字，等待其他人确认</div>
+    </div>`;
+  } else if (myNum != null) {
+    if (me?.peeked) {
+      h += `<div class="card text-center" style="padding:24px">
+        <div style="font-size:13px;color:var(--g400);margin-bottom:8px">你的数字</div>
+        <div style="font-size:56px;font-weight:800;color:var(--primary);line-height:1">${myNum}</div>
+        <div style="font-size:12px;color:var(--success);margin-top:8px">✓ 已确认</div>
+      </div>`;
+    } else {
+      h += `<div class="card text-center" style="padding:24px">
+        <button class="btn btn-primary" onclick="openPeek()" style="width:auto">👁 查看我的数字</button>
+        <div style="font-size:12px;color:var(--g400);margin-top:8px">点击查看后，请记住数字并确认</div>
+      </div>`;
+    }
+  }
+  h += `<div class="card"><div class="card-title">查看进度</div><div id="peek-list">`;
+  GS.players.forEach(p => {
+    const tag = p.id === GS.myId ? '（你）' : '';
+    h += `<div style="padding:6px 0;font-size:14px">${p.peeked ? '✅' : '⏳'} ${p.name}${tag}</div>`;
+  });
+  h += '</div></div>';
+  return h;
+}
+
+function openPeek() {
+  const me = myPlayer();
+  const num = me?.number ?? GS.myNumber;
+  if (num == null) return;
+  document.getElementById('peek-name').textContent = me?.name || GS.myName;
+  document.getElementById('peek-number').textContent = num;
+  document.getElementById('peek-overlay').classList.remove('hidden');
+}
+function closePeek() { document.getElementById('peek-overlay').classList.add('hidden'); }
+
+function confirmPeek() {
+  const me = myPlayer();
+  if (me) me.peeked = true;
+  closePeek();
+  if (GS.isHost) {
+    renderGame();
+    if (GS.players.every(p => p.peeked)) setTimeout(() => goPhase('answer'), 500);
+  } else {
+    sendHost({ type: 'peek_ack' });
+    renderGame();
+  }
+}
+
+function updateClientPeek(peekedData) {
+  peekedData.forEach(p => {
+    const player = GS.players.find(x => x.id === p.id);
+    if (player) player.peeked = p.peeked;
+  });
+  const el = document.getElementById('peek-list');
+  if (!el) return;
+  el.innerHTML = peekedData.map(p =>
+    `<div style="padding:6px 0;font-size:14px">${p.peeked ? '✅' : '⏳'} ${p.name}${p.name === GS.myName ? '（你）' : ''}</div>`
+  ).join('');
+}
+
+// ---- ANSWER PHASE ----
+function renderAnswer() {
+  let h = topicCard();
+  if (!amCaptain()) {
+    const me = myPlayer();
+    const myNum = me?.number ?? GS.myNumber;
+    if (myNum != null) {
+      h += `<div class="card text-center" style="padding:16px">
+        <div style="font-size:12px;color:var(--g400)">你的数字</div>
+        <div style="font-size:36px;font-weight:800;color:var(--primary);line-height:1">${myNum}</div>
+      </div>`;
+    }
+  }
+  if (amCaptain()) {
+    h += `<div class="answer-prompt"><div class="big-text">🎤 你是出题者</div>
+      <div class="sub-text">请仔细听大家的回答，然后翻牌</div></div>
+      <button class="btn btn-primary" onclick="goFlip()">进入翻牌</button>`;
+  } else {
+    h += `<div class="answer-prompt"><div class="big-text">🗣 请在语音中回答！</div>
+      <div class="sub-text">根据你的数字大小，给出对应强度的回答</div></div>`;
+  }
+  return h;
+}
+
+function goFlip() {
+  if (GS.isHost) {
+    GS.phase = 'flip';
+    GS.flippedCards = [];
+    GS.flipVersion++;
+    renderGame();
+    broadcast({ type: 'phase_change', phase: 'flip', extra: { captainIndex: GS.captainIndex, flippedCards: [], flipVersion: GS.flipVersion } });
+    const captain = GS.players[GS.captainIndex];
+    if (captain && !captain.isHost) {
+      sendClient(captain.id, { type: 'all_numbers', players: GS.players.map(p => ({ id: p.id, name: p.name, number: p.number })) });
+    }
+  } else { sendHost({ type: 'flip_request' }); }
+}
+
+function renderFlip() {
+  if (amCaptain()) {
+    const captainId = GS.players[GS.captainIndex]?.id;
+    const others = GS.players.filter(p => p.id !== captainId && p.number != null);
+    const allFlipped = GS.flippedCards.length === others.length && others.length > 0;
+    return `<div class="card">
+      <div class="card-title">🃏 请从小到大翻牌</div>
+      <p style="font-size:13px;color:var(--g500);margin-bottom:12px">点击卡片翻开数字，按从小到大的顺序依次翻开</p>
+      <div class="flip-area" id="flip-area">
+        ${others.map(p => {
+          const flipped = GS.flippedCards.find(f => f.id === p.id);
+          if (flipped) {
+            return `<div class="flip-card flipped ${flipped.correct ? 'correct' : 'wrong'}">
+              <div class="flip-card-inner">
+                <div class="flip-card-front"><span class="avatar" style="width:32px;height:32px">${p.name[0]}</span>${p.name}</div>
+                <div class="flip-card-back">
+                  <div class="flip-number">${flipped.number}</div>
+                  <div class="flip-name">${p.name}</div>
+                  <div class="flip-status">${flipped.correct ? '✅' : '❌'}</div>
+                </div>
+              </div>
+            </div>`;
+          }
+          return `<div class="flip-card" onclick="doFlipCard('${p.id}')">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><span class="avatar" style="width:32px;height:32px">${p.name[0]}</span>${p.name}</div>
+              <div class="flip-card-back"><div class="flip-number">?</div></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${allFlipped ? `<button class="btn btn-primary mt-2" onclick="finishFlip()">完成翻牌</button>` : ''}
+    </div>`;
+  }
+  const cap = GS.players[GS.captainIndex];
+  return `<div class="card text-center" style="padding:40px 20px">
+    <div style="font-size:48px;margin-bottom:16px">🃏</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:8px">${cap?.name} 正在翻牌</div>
+    <div class="text-muted">请稍候<span class="wd"></span></div>
+  </div>`;
+}
+
+function doFlipCard(playerId) {
+  if (!amCaptain()) return;
+  const p = GS.players.find(x => x.id === playerId);
+  if (!p || p.number == null) return;
+  const alreadyFlipped = GS.flippedCards.find(f => f.id === playerId);
+  if (alreadyFlipped) return;
+  const prevMax = GS.flippedCards.length > 0 ? Math.max(...GS.flippedCards.map(f => f.number)) : 0;
+  const correct = GS.flippedCards.length === 0 || p.number > prevMax;
+  const flipData = { id: playerId, name: p.name, number: p.number, correct };
+  if (GS.isHost) {
+    processFlipCardAsHost(flipData);
+  } else {
+    sendHost({ type: 'flip_card', flipData, flipVersion: GS.flipVersion });
+  }
+}
+
+function processFlipCardAsHost(flipData) {
+  const exists = GS.flippedCards.find(f => f.id === flipData.id);
+  if (exists) return;
+  GS.flippedCards.push(flipData);
+  if (!flipData.correct && GS.unicorns > 0) {
+    GS.unicorns--;
+    GS.poops++;
+  }
+  if (GS.unicorns === 0) {
+    broadcast({ type: 'game_fail', round: GS.round, unicorns: 0, poops: GS.poops });
+    GS.phase = 'gameFail';
+    renderGame(); updateBar();
+    return;
+  }
+  broadcast({ type: 'flip_card', flipData, flipVersion: GS.flipVersion, unicorns: GS.unicorns, poops: GS.poops });
+  renderGame();
+  updateBar();
+}
+
+function finishFlip() {
+  if (!amCaptain()) return;
+  const captainId = GS.players[GS.captainIndex]?.id;
+  const others = GS.players.filter(p => p.id !== captainId && p.number != null);
+  if (GS.flippedCards.length < others.length) { toast('请翻开所有卡片'); return; }
+  GS.phase = 'reveal';
+  GS.revealedCards = [...GS.flippedCards];
+  if (GS.isHost) {
+    broadcast({ type: 'phase_change', phase: 'reveal', extra: { flippedCards: GS.flippedCards, poops: GS.poops } });
+    renderGame();
+  } else {
+    sendHost({ type: 'finish_flip' });
+  }
+}
+
+
+
+function renderReveal() {
+  const allCorrect = GS.revealedCards.every(c => c.correct);
+  const continueBtn = amCaptain() 
+    ? `<button class="btn btn-primary mt-2" onclick="goRoundEnd()">继续</button>`
+    : `<div class="text-muted mt-2" style="font-size:14px">等待 ${GS.players[GS.captainIndex]?.name} 继续<span class="wd"></span></div>`;
+  return `<div class="card text-center" style="padding:24px 20px">
+    <div style="font-size:48px;margin-bottom:16px">${allCorrect ? '🦄' : '💩'}</div>
+    <div style="font-size:20px;font-weight:700;margin-bottom:8px">${allCorrect ? '完美翻牌！' : '翻牌有误'}</div>
+    <div style="font-size:14px;color:var(--g500);margin-bottom:16px">
+      🦄 ${GS.unicorns}　💩 ${GS.poops}
+    </div>
+    <div id="reveal-list" style="text-align:left">
+      ${GS.revealedCards.map(c => `
+        <div class="reveal-card">
+          <div class="reveal-number ${c.correct?'correct':'wrong'}">${c.number}</div>
+          <div><div class="reveal-name">${c.name}</div><div class="reveal-status">${c.correct?'✅ 正确':'❌ 错误'}</div></div>
+        </div>`).join('')}
+    </div>
+    ${continueBtn}
+  </div>`;
+}
+
+function goRoundEnd() {
+  if (!amCaptain()) return;
+  const allCorrect = GS.revealedCards.every(c => c.correct);
+  if (allCorrect) {
+    toast('🎉 完美翻牌！指示物保持不变');
+  }
+  GS.phase = 'roundEnd';
+  if (GS.isHost) {
+    broadcast({ type: 'round_end', unicorns: GS.unicorns, poops: GS.poops });
+  } else {
+    sendHost({ type: 'round_end_request' });
+  }
+  renderGame(); updateBar();
+}
+
+// ---- ROUND END ----
+function renderRoundEnd() {
+  const allCorrect = GS.revealedCards.every(c => c.correct);
+  const nextCap = GS.players[(GS.captainIndex + 1) % GS.players.length];
+  let actions = '';
+  if (GS.isHost || amCaptain()) {
+    actions = `<button class="btn btn-primary" onclick="doNextRound()">下一轮</button>
+      <button class="btn btn-warn mt-2" onclick="doEndGame()">结束游戏</button>`;
+  } else {
+    actions = `<div class="text-muted" style="font-size:14px">等待 ${GS.players[GS.captainIndex]?.name} 或房主操作<span class="wd"></span></div>`;
+  }
+  return `<div class="card text-center" style="padding:32px 20px">
+    <div style="font-size:48px;margin-bottom:16px">${allCorrect ? '🦄' : '💩'}</div>
+    <div style="font-size:20px;font-weight:700;margin-bottom:8px">${allCorrect ? '完美翻牌！' : '翻牌有误'}</div>
+    <div style="font-size:14px;color:var(--g500);margin-bottom:16px">
+      🦄 ${GS.unicorns}　💩 ${GS.poops}
+    </div>
+    <div style="font-size:14px;color:var(--g500);margin-bottom:16px">下一轮出题者：${nextCap?.name}</div>
+    ${actions}
+  </div>`;
+}
+
+function doNextRound() {
+  GS.round++;
+  GS.captainIndex = (GS.captainIndex + 1) % GS.players.length;
+  GS.phase = 'topic';
+  GS.flippedCards = [];
+  GS.revealedCards = [];
+  GS.flipVersion++;
+  GS.topic = { text: '', low: '', high: '' };
+  GS.myNumber = null;
+  GS.players.forEach(p => { p.number = null; p.peeked = false; });
+  if (GS.isHost) {
+    broadcast({ type: 'state_update', state: {
+      round: GS.round, captainIndex: GS.captainIndex, phase: 'topic',
+      topic: GS.topic, flippedCards: [], revealedCards: [], flipVersion: GS.flipVersion,
+      players: GS.players, unicorns: GS.unicorns, poops: GS.poops
+    }});
+  }
+  renderGame(); updateBar();
+}
+
+function doEndGame() {
+  GS.phase = 'gameOver';
+  broadcast({ type: 'game_over', unicorns: GS.unicorns, poops: GS.poops });
+  renderGame(); updateBar();
+}
+
+// ---- GAME OVER ----
+function renderGameOver() {
+  const actions = GS.isHost 
+    ? `<button class="btn btn-primary mt-2" onclick="doRestartGame()">再来一局</button>
+      <button class="btn btn-warn mt-2" onclick="backToLobby()">离开房间</button>`
+    : `<div class="text-muted mt-2" style="font-size:14px">等待房主开始新游戏<span class="wd"></span></div>`;
+  return `<div class="card text-center" style="padding:40px 20px">
+    <div style="font-size:64px;margin-bottom:16px">🏆</div>
+    <div style="font-size:24px;font-weight:800;margin-bottom:8px">游戏结束</div>
+    <div style="font-size:16px;color:var(--g500);margin-bottom:8px">共 ${GS.round} 轮</div>
+    <div style="font-size:16px;color:var(--g500);margin-bottom:24px">
+      🦄 ${GS.unicorns}　💩 ${GS.poops}
+    </div>
+    ${actions}
+  </div>`;
+}
+
+function doRestartGame() {
+  if (!GS.isHost) return;
+  GS.round = 1;
+  GS.captainIndex = 0;
+  GS.phase = 'topic';
+  GS.flippedCards = [];
+  GS.revealedCards = [];
+  GS.flipVersion++;
+  GS.topic = { text: '', low: '', high: '' };
+  GS.myNumber = null;
+  GS.unicorns = GS.players.length;
+  GS.totalUnicorns = GS.unicorns;
+  GS.poops = 0;
+  GS.players.forEach(p => { p.number = null; p.peeked = false; });
+  broadcast({ type: 'state_update', state: {
+    round: GS.round, captainIndex: GS.captainIndex, phase: 'topic',
+    topic: GS.topic, flippedCards: [], revealedCards: [], flipVersion: GS.flipVersion,
+    players: GS.players, unicorns: GS.unicorns, poops: GS.poops, totalUnicorns: GS.totalUnicorns
+  }});
+  renderGame(); updateBar();
+}
+
+// ---- GAME FAIL (独角兽归零) ----
+function renderGameFail() {
+  const actions = GS.isHost || amCaptain()
+    ? `<button class="btn btn-warn mt-2" onclick="doEndGame()">结束游戏</button>
+      <button class="btn btn-primary mt-2" onclick="doRestartGame()">再来一局</button>`
+    : `<div class="text-muted mt-2" style="font-size:14px">等待房主或${GS.players[GS.captainIndex]?.name}操作<span class="wd"></span></div>`;
+  return `<div class="card text-center" style="padding:40px 20px">
+    <div style="font-size:64px;margin-bottom:16px">💩</div>
+    <div style="font-size:24px;font-weight:800;margin-bottom:8px;color:var(--error)">游戏失败</div>
+    <div style="font-size:14px;color:var(--g500);margin-bottom:8px">所有独角兽都变成了大便！</div>
+    <div style="font-size:16px;color:var(--g500);margin-bottom:8px">进行了 ${GS.round} 轮</div>
+    <div style="font-size:16px;color:var(--g500);margin-bottom:24px">
+      🦄 ${GS.unicorns}　💩 ${GS.poops}
+    </div>
+    ${actions}
+  </div>`;
+}
+</script>
+</body>
+</html>
