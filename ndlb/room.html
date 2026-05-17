@@ -79,6 +79,7 @@
       <div class="room-code-display" id="room-code-display"></div>
       <ul class="player-list" id="waiting-player-list"></ul>
       <button class="btn btn-success" id="start-game-btn" onclick="doStartGame()" disabled>至少4人才能开始</button>
+      <button class="btn btn-sm btn-secondary mt-2" onclick="backToLobbyFromRoom()" style="width:auto;display:block;margin:12px auto 0">← 返回大厅</button>
     </div>
     <div id="joined-waiting" class="room-panel hidden">
       <div class="card-title">已加入房间</div>
@@ -116,6 +117,18 @@ let urlRoomCode = null;
 
 function backToIndex() {
   window.location.href = '/ndlb/index.html';
+}
+
+function backToLobbyFromRoom() {
+  // 断开 PeerJS 连接
+  if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+  // 清除房间信息
+  sessionStorage.removeItem('ndl isHost');
+  sessionStorage.removeItem('ndl roomCode');
+  sessionStorage.removeItem('ndl freshCreate');
+  sessionStorage.removeItem('ndl relayMode');
+  // 跳转到房间页面（不携带房间码），显示大厅
+  window.location.href = '/ndlb/room.html';
 }
 
 function getRoomCodeFromPath() {
