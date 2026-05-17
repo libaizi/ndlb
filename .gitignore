@@ -1,0 +1,12 @@
+# 忽略 Markdown 文件
+*.md
+
+# 忽略临时文件和备份
+*~
+*.bak
+*.tmp
+
+# 忽略系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
