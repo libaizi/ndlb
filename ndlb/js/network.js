@@ -256,11 +256,29 @@ function bindHostConn(conn) {
   conn.on('close', () => {
     const p = GS.players.find(x => x.id === conn.peer);
     if (p) {
-      toast(p.name + ' 离开了房间');
+      console.log(`[Host] Player ${p.name} disconnected`);
+      // 无论大厅还是游戏阶段，都移除玩家
+      GS.players = GS.players.filter(x => x.id !== conn.peer);
+      broadcast({ type: 'player_list', players: GS.players.map(p => ({ name: p.name, isHost: p.isHost })) });
+      
       if (GS.phase === 'lobby') {
-        GS.players = GS.players.filter(x => x.id !== conn.peer);
-        broadcast({ type: 'player_list', players: GS.players.map(p => ({ name: p.name, isHost: p.isHost })) });
         updateWaitingRoom();
+      } else {
+        // 游戏阶段：检查掉线的是否是出题者
+        if (GS.captainIndex !== undefined && GS.players[GS.captainIndex]?.id === conn.peer) {
+          // 出题者掉线，切换到下一个玩家
+          GS.captainIndex = (GS.captainIndex + 1) % GS.players.length;
+          toast(`${p.name} 掉线，轮换出题者`);
+          broadcast({ type: 'captain_change', captainIndex: GS.captainIndex });
+          // 如果正在等待出题，自动进入下一轮
+          if (GS.phase === 'topic' || GS.phase === 'peek') {
+            goPhase('answer');
+          }
+        } else {
+          toast(`${p.name} 离开了游戏`);
+        }
+        renderGame();
+        updateBar();
       }
     }
     delete conns[conn.peer];

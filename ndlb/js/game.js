@@ -777,6 +777,9 @@ function onHostMsg(data) {
         GS.poops = data.extra?.poops || GS.poops;
       }
       renderGame(); updateBar(); break;
+    case 'captain_change':
+      GS.captainIndex = data.captainIndex;
+      renderGame(); updateBar(); break;
     case 'flip_card':
       if (data.flipVersion !== undefined && data.flipVersion !== GS.flipVersion) break;
       const exists = GS.flippedCards.find(f => f.id === data.flipData.id);
